@@ -4,6 +4,7 @@ Prosjekt i databaser
 
 ## Repository Structure
 
-- **database-modeling/**: ER-diagrams and database modeling files (LaTeX)
-- **sql/**: SQL code and database scripts
-- **report/**: Final project report
+- **database-modeling/**: ER-diagram og relational model. 
+- **sql/**: Alt av sql-kode
+- **report/**: Her kan vi bare samle det vi har
+
