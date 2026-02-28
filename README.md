@@ -7,4 +7,3 @@ Prosjekt i databaser
 - **database-modeling/**: ER-diagram og relational model. 
 - **sql/**: Alt av sql-kode
 - **report/**: Her kan vi bare samle det vi har
-
