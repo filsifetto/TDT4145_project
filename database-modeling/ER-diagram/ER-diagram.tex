@@ -56,10 +56,12 @@
     \hspace{1em} nummer\\
     åpningstider\\
     \hspace{1em} fra\\
-    \hspace{1em} til\\
-    bemannet\\
-    \hspace{1em} fra\\
     \hspace{1em} til};
+  \node[ident relationship] (senter-bemanning) at (-6, 24) {\normalsize bemannes};
+  \node[weak entity] (bemanning) at (-6, 20) {\entnavn{Bemanning}\\
+    \dashuline{dag}\\
+    start\\
+    slutt};
   \node[relationship] (senter-fasilitet) at (9, 26) {\normalsize har};
   \node[entity] (fasilitet) at (18, 26) {\entnavn{Fasilitet}\\
     \key{ID}\\
@@ -135,6 +137,10 @@
   % Senter -- har -- Fasilitet
   \draw (senter.east) -- (senter-fasilitet.west);
   \draw (fasilitet.west) -- (senter-fasilitet.east);
+
+  % Senter -- bemannes (ident.) -- Bemanning
+  \draw[->] (senter-bemanning.east) -- (senter.west);
+  \draw[double, double distance=1.5pt] (senter-bemanning.south) -- (bemanning.north);
 
   % Senter -- har_sal -- Sal
   \draw[->] (senter-sal.north) -- (senter.south);
