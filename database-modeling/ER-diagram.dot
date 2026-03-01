@@ -1,0 +1,34 @@
+// ER-diagram – Graphviz (dot) for automatisk layout.
+// Kjør: dot -Tpdf -o ER-diagram-gv.pdf ER-diagram.dot
+// Eller: neato -Tpdf -o ER-diagram-gv.pdf ER-diagram.dot  (færre kryss ofte)
+graph ER {
+  rankdir=TB;
+  splines=line;
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=9];
+
+  // Entiteter (bokser)
+  node [shape=box, style=filled, fillcolor="#ADD8E6"];
+  Senter; Fasilitet; Sal; Sykkel; Tredemolle; Gruppeaktivitet; Brukerprofil; Økt; Idrettslag; Prikk;
+
+  // Relasjoner (diamanter)
+  node [shape=diamond, style=filled, fillcolor="#ADD8E6", width=0.8, height=0.8];
+  har; har_sal; har_sykkel; har_tredemolle; ansvarlig_for; har_økt; har_prikk; er_medlem;
+
+  // Weak entities (tykkere kant)
+  Sal [penwidth=2];
+  Sykkel [penwidth=2];
+  Tredemolle [penwidth=2];
+  Økt [penwidth=2];
+  Prikk [penwidth=2];
+
+  // Kanter – strukturen styrer layout (mindre kryss)
+  Senter -- har; har -- Fasilitet;
+  Senter -- har_sal; har_sal -- Sal;
+  Sal -- har_sykkel; har_sykkel -- Sykkel;
+  Sal -- har_tredemolle; har_tredemolle -- Tredemolle;
+  Gruppeaktivitet -- ansvarlig_for; ansvarlig_for -- Brukerprofil;
+  Brukerprofil -- har_økt; har_økt -- Økt;
+  Brukerprofil -- har_prikk; har_prikk -- Prikk;
+  Brukerprofil -- er_medlem; er_medlem -- Idrettslag;
+}
