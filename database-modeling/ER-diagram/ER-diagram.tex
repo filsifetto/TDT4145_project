@@ -107,6 +107,9 @@
     navn\\
     beskrivelse};
 
+  % Idrettslagstime -- møter_til (0,n : 0,n) -- Profil
+  \node[relationship] (moter-til-idrettslagstime) at (17, 2) {\normalsize møter\_til};
+
   % ========== SONE 4: Gruppeaktivitet (svak av Sal) og Profil ==========
   \node[weak entity] (gruppe) at (9.5, -5.5) {\entnavn{Gruppeaktivitet}\\
     \dashuline{ID}\\
@@ -177,6 +180,10 @@
   \node[relationship] (er-medlem) at (28, 0.5) {\normalsize er\_medlem};
   \draw (bruker.north) -- (er-medlem.south);
   \draw (idrett.south) -- (er-medlem.north);
+
+  % Idrettslagstime -- møter_til (0,n : 0,n) -- Profil
+  \draw (idrettslagstime.south east) -- (moter-til-idrettslagstime.north west);
+  \draw (moter-til-idrettslagstime.south east) -- (bruker.north west);
 
   % Gruppeaktivitet -- instruktør_for / møter_til / påmeldt_til -- Profil (anker slik at linjene ikke krysser)
   \draw[double, double distance=1.5pt] (gruppe.north east) -- (instruktor-for.south west);
