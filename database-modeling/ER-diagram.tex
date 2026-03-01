@@ -81,24 +81,25 @@
     \dashuline{nummer}\\
     bluetooth};
 
-  % ========== SONE 3: Idrettslagstime (sentrum) – booket_for fra Sal ==========
-  \node[entity] (idrettslagstime) at (9.5, 7.5) {\entnavn{Idrettslagstime}\\
-    \key{ID}\\
+  % ========== SONE 3: Idrettslagstime (svak av Sal) – booket_for fra Sal ==========
+  \node[weak entity] (idrettslagstime) at (9.5, 7.5) {\entnavn{Idrettslagstime}\\
+    \dashuline{ID}\\
+    type\\
     tidsrom\\
     \hspace{1em} start\\
     \hspace{1em} slutt\\
     beskrivelse};
-  \node[relationship] (booket-for-sal) at (4.5, 9) {\normalsize booket\_for};
-  \node[relationship] (booket-for-gruppe) at (5, 3) {\normalsize booket\_for};
+  \node[ident relationship] (booket-for-sal) at (4.5, 9) {\normalsize booket\_for};
+  \node[ident relationship] (booket-for-gruppe) at (5, 3) {\normalsize booket\_for};
   \node[relationship] (arrangerer) at (15, 7.5) {\normalsize arrangerer};
   \node[entity] (idrett) at (21, 7.5) {\entnavn{Idrettslag}\\
     \key{ID}\\
     navn\\
     beskrivelse};
 
-  % ========== SONE 4: Gruppeaktivitet og Brukerprofil ==========
-  \node[entity] (gruppe) at (9.5, -5.5) {\entnavn{Gruppeaktivitet}\\
-    \key{ID}\\
+  % ========== SONE 4: Gruppeaktivitet (svak av Sal) og Brukerprofil ==========
+  \node[weak entity] (gruppe) at (9.5, -5.5) {\entnavn{Gruppeaktivitet}\\
+    \dashuline{ID}\\
     type\\
     tidsrom\\
     \hspace{1em} start\\
@@ -113,12 +114,7 @@
     epost\\
     telefon};
 
-  % ========== SONE 5: Brukerprofil → Økt og Prikk ==========
-  \node[ident relationship] (bruker-okt) at (25, -5.5) {\normalsize har\_økt};
-  \node[weak entity] (okt) at (30, -5.5) {\entnavn{Økt}\\
-    \dashuline{ID}\\
-    innsjekk\\
-    utsjekk};
+  % ========== SONE 5: Brukerprofil → Prikk ==========
   \node[ident relationship] (bruker-prikk) at (25, -11) {\normalsize har\_prikk};
   \node[weak entity] (prikk) at (30, -11) {\entnavn{Prikk}\\
     \dashuline{dato\_fikk\_prikk}};
@@ -140,13 +136,13 @@
   \draw[->] (sal-sykkel.north) -- (sal.south);
   \draw[double, double distance=1.5pt] (sal-sykkel.south) -- (sykkel.north);
 
-  % Sal -- booket_for -- Idrettslagstime
+  % Sal -- booket_for (ident.) -- Idrettslagstime (svak)
   \draw[->] (booket-for-sal.west) -- (sal.east);
-  \draw[double, double distance=1.5pt] (idrettslagstime.west) -- (booket-for-sal.east);
+  \draw[double, double distance=1.5pt] (booket-for-sal.east) -- (idrettslagstime.west);
 
-  % Sal -- booket_for -- Gruppeaktivitet
+  % Sal -- booket_for (ident) -- Gruppeaktivitet (svak, ID diskriminant)
   \draw[->] (booket-for-gruppe.west) -- (sal.east);
-  \draw[double, double distance=1.5pt] (gruppe.north west) -- (booket-for-gruppe.south east);
+  \draw[double, double distance=1.5pt] (booket-for-gruppe.south east) -- (gruppe.north west);
 
   % Idrettslagstime -- arrangerer -- Idrettslag
   \draw[double, double distance=1.5pt] (idrettslagstime.east) -- (arrangerer.west);
@@ -164,10 +160,6 @@
   \draw (moter-til.east) -- (bruker.west);
   \draw (gruppe.south east) -- (pameldt-til.north west);
   \draw (bruker.south west) -- (pameldt-til.north east);
-
-  % Brukerprofil -- har_økt -- Økt
-  \draw[->] (bruker-okt.west) -- (bruker.east);
-  \draw[double, double distance=1.5pt] (bruker-okt.east) -- (okt.west);
 
   % Brukerprofil -- har_prikk -- Prikk
   \draw[->] (bruker-prikk.north west) -- (bruker.south east);
