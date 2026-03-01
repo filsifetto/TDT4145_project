@@ -120,6 +120,7 @@
   \node[relationship] (moter-til) at (16, -5.5) {\normalsize møter\_til};
   \node[attribute] (moter-til-tidspunkt) at (16, -7.2) {\itshape tidspunkt};
   \node[relationship] (pameldt-til) at (16, -8.5) {\normalsize påmeldt\_til};
+  \node[attribute] (pameldt-til-pamelding-nummer) at (16, -10.2) {\itshape påmelding\_nummer};
   \node[entity] (bruker) at (24, -5.5) {\entnavn{Profil}\\
     \key{ID}\\
     type\\
@@ -185,6 +186,7 @@
   \draw[dashed] (moter-til.south) -- (moter-til-tidspunkt.north);
   \draw (gruppe.south east) -- (pameldt-til.north west);
   \draw (bruker.south west) -- (pameldt-til.north east);
+  \draw[dashed] (pameldt-til.south) -- (pameldt-til-pamelding-nummer.north);
 
   % Profil -- har_prikk -- Prikk
   \draw[->] (bruker-prikk.north west) -- (bruker.south east);

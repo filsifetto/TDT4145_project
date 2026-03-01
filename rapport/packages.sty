@@ -1,0 +1,94 @@
+% TDT4145 rapport – basert på mal fra template_reference
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{packages}[2021/04/20 Packages]
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% --- Appendices ---
+\usepackage{appendix}
+\newcommand{\addappendix}{
+    \newpage
+    \appendix
+    \section*{Appendix}
+    \addcontentsline{toc}{section}{Appendix}
+    \renewcommand{\thesubsection}{\Alph{subsection}}
+}
+
+% --- Bibliography & References ---
+\usepackage[backend = biber,
+            style = authoryear-comp,
+            urldate = long,
+            maxcitenames = 2]{biblatex}
+\addbibresource{references.bib}
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[nottoc]{tocbibind}
+\newcommand{\source}[1]{\vspace{-4pt} \caption*{\hfill \footnotesize{Kilde: {#1}} } }
+
+% --- Code --- (minted krever -shell-escape og pygmentize; bruk listing eller lstlisting om ønskelig)
+% \usepackage{minted}
+\usepackage{listings}
+
+% --- Colors ---
+\usepackage[dvipsnames]{xcolor}
+
+% --- Flow Charts ---
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm, minimum height=2em]
+
+% --- Front matter ---
+\newcommand{\frontmatter}{\pagenumbering{roman}}
+
+% --- General ---
+\usepackage{import}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\hypersetup{colorlinks, citecolor = black, filecolor = black, linkcolor = black, urlcolor = black}
+\usepackage{comment}
+\usepackage{pdfpages}
+
+% --- Image ---
+\usepackage{graphicx}
+% Først aktuell mappe (rapport/), deretter prosjektrot (slik at ER-diagram og logo finnes)
+\graphicspath{{./}{../}}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{url}
+\urlstyle{sf}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+% --- Language (norsk for rapporten; bruk [english,norsk] + norsk-captions når norsk.ldf er installert) ---
+\usepackage[english]{babel}
+\renewcommand{\listfigurename}{Liste med figurer}
+\AtBeginDocument{\selectlanguage{english}}
+
+% --- Main matter ---
+\newcommand{\mainmatter}{
+    \newpage
+    \pagenumbering{arabic}
+}
+
+% --- Mathematics ---
+\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{textcomp}
+\usepackage{gensymb}
+
+% --- Page setup ---
+\usepackage[a4paper, total={150mm, 245mm, footskip=14mm}]{geometry}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.8em}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.1ex}
+\renewcommand{\footrulewidth}{0.1ex}
+\fancyfoot[C]{\thepage}

@@ -1,0 +1,34 @@
+% TDT4145 Prosjektrapport – Databaser
+% Kompiler fra rapport-mappen: pdflatex main.tex && biber main && pdflatex main.tex && pdflatex main.tex
+\documentclass{article}
+
+\usepackage{packages}
+
+\begin{document}
+
+\import{./}{title}
+
+\frontmatter
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+
+% 1) ER-diagram (referanse til database-modeling/ER-diagram/ER-diagram.pdf, antakelser, diskusjon)
+\import{./Sections/}{01_ER_diagram}
+
+% 2) ER-diagram oversatt til relational schema
+\import{./Sections/}{02_Relational_schema}
+
+% 3) SQL-script
+\import{./Sections/}{03_SQL_script}
+
+% 4) Svar på spørsmål
+\import{./Sections/}{04_Svar_paa_spoersmaal}
+
+\newpage
+\printbibliography[heading = bibintoc, title = Litteraturliste]
+
+\end{document}
