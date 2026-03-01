@@ -2,7 +2,7 @@
 
 ER-diagrammet vist i \autoref{fig:er-diagram} viser entiteter, relasjoner og attributter.
 
-\begin{figur}[H]
+\begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth,height=0.95\textheight,keepaspectratio]{database-modeling/ER-diagram/ER-diagram.pdf}
     \caption{ER-diagram.}
@@ -23,6 +23,7 @@ Følgende antakelser er gjort:
     \item \textbf{Plasser på aktivitet.} Antall plasser på en aktivitet er definert ut fra kapasiteten til salen aktiviteten foregår i.
     \item \textbf{Påmelding og kø.} Køsystemet i påmelding tilrettelegges for med et påmeldingsnummer, som fungerer som kølapp.
      For en aktivitet i en sal med kapasitet $n$ regnes de $n$ profilene med lavest påmeldingsnummer som påmeldt, resten står på venteliste.
+     For idrettslagstime vil vi bruke et dropin-system, der de $n$ første som møter vil få plass.
     \item \textbf{Sykler og tredemøller.} Utstyr flyttes ikke mellom rom og identifiseres entydig med nummer og sal.
     \item \textbf{Instruktør.} Vi har generalisert Profil-entiteten, slik at dette fanger både ansatte/instruktører
      og vanlige medlemmer. Vi skiller mellom rollene med attributten \textit{type}. Dette kan forsvares med at instruktører
