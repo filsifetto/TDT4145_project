@@ -35,4 +35,18 @@ Følgende antakelser er gjort:
 
 \subsection{Det ER-modellen ikke uttrykker}
 
-% --- Skriv her: Diskuter hva som ikke lar seg uttrykke i ER-modellen (f.eks. constraints, regler, tidsaspekter). ---
+Følgende regler og restriksjoner kan brukes i et system som bygger på modellen, men uttrykkes ikke eksplisitt i ER-diagrammet:
+
+\begin{enumerate}
+    \item \textbf{Prikk ved for sen møting.} En profil får ikke automatisk prikk dersom den møter under 5 minutter før en aktivitet. For å tilrettelegge for prikksystemet skiller
+     vi mellom \textit{påmeldt\_til} og \textit{møter\_til}, med tidspunkt som attributt i \textit{møter\_til}. Da kan man beregne om en profil
+      skal få prikk ved å sjekke om den er påmeldt til en aktivitet uten å møte opp før 5 minutter før start (inkludert ikke møte opp i det hele tatt). 
+      Denne regelen er ikke eksplisitt i modellen.
+    \item \textbf{Utestengelse fra nettbooking.} Ved 3 prikker på 30 dager skal profilen utestenges fra nettbooking. Dette kan regnes ut fra en
+     profils prikker og tilhørende datoer. Modellen viser ikke at profilen da ikke kan bruke nettbooking.
+    \item \textbf{Møting etter aktivitetens slutt.} Det skal ikke være mulig å registrere møting til en aktivitet etter aktivitetens slutt.
+     (Vi antar at det er mulig å møte frem til aktivitetens slutt. Det betyr ikke at profilen unngår prikk dersom den møter under 5 minutter
+      før gruppeaktivitetsstart.) Denne restriksjonen vises ikke i ER-modellen.
+    \item \textbf{Ett tidspunkt, én booking per sal.} For et gitt tidspunkt kan en sal bookes av maksimalt én gruppeaktivitet eller én idrettslagstime. Dette er ikke uttrykt i modellen.
+    \item \textbf{Medlemskap for idrettslagstime.} For at en profil skal kunne møte til en idrettslagstime, må den være medlem av idrettslaget. Dette kravet kommer ikke frem i modellen.
+\end{enumerate}
