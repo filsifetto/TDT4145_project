@@ -107,6 +107,7 @@
     beskrivelse};
   \node[relationship] (instruktor-for) at (14, -2.5) {\normalsize instruktør\_for};
   \node[relationship] (moter-til) at (14, -5.5) {\normalsize møter\_til};
+  \node[attribute] (moter-til-tidspunkt) at (14, -7.2) {\itshape tidspunkt};
   \node[relationship] (pameldt-til) at (14, -8.5) {\normalsize påmeldt\_til};
   \node[entity] (bruker) at (21, -5.5) {\entnavn{Brukerprofil}\\
     \key{ID}\\
@@ -158,6 +159,7 @@
   \draw[->] (instruktor-for.south east) -- (bruker.north west);
   \draw (gruppe.east) -- (moter-til.west);
   \draw (moter-til.east) -- (bruker.west);
+  \draw[dashed] (moter-til.south) -- (moter-til-tidspunkt.north);
   \draw (gruppe.south east) -- (pameldt-til.north west);
   \draw (bruker.south west) -- (pameldt-til.north east);
 
