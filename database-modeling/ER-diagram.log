@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.3.1)  1 MAR 2026 13:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.3.1)  1 MAR 2026 14:12
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -405,6 +405,14 @@ File: tikzlibraryfit.code.tex 2021/05/15 v3.1.9a (3.1.9a)
 zlibrarypositioning.code.tex
 File: tikzlibrarypositioning.code.tex 2021/05/15 v3.1.9a (3.1.9a)
 )
+(/usr/share/texlive/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.meta.
+code.tex
+File: pgflibraryarrows.meta.code.tex 2021/05/15 v3.1.9a (3.1.9a)
+\pgfarrowinset=\dimen195
+\pgfarrowlength=\dimen196
+\pgfarrowwidth=\dimen197
+\pgfarrowlinewidth=\dimen198
+)
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count284
@@ -431,13 +439,13 @@ LaTeX Font Info:    ... okay on input line 15.
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count285
-\scratchdimen=\dimen195
+\scratchdimen=\dimen199
 \scratchbox=\box66
 \nofMPsegments=\count286
 \nofMParguments=\count287
 \everyMPshowfont=\toks31
 \MPscratchCnt=\count288
-\MPscratchDim=\dimen196
+\MPscratchDim=\dimen256
 \MPnumerator=\count289
 \makeMPintoPDFobject=\count290
 \everyMPtoPDFconversion=\toks32
@@ -451,26 +459,26 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 51.
+(Font)              <7> on input line 52.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 51.
+(Font)              <5> on input line 52.
 
 [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./ER-diagram.aux) ) 
 Here is how much of TeX's memory you used:
- 13678 strings out of 480171
- 291236 string characters out of 5894490
- 566654 words of memory out of 5000000
- 31408 multiletter control sequences out of 15000+600000
+ 14060 strings out of 480171
+ 301374 string characters out of 5894490
+ 587964 words of memory out of 5000000
+ 31786 multiletter control sequences out of 15000+600000
  470019 words of font info for 31 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 115i,7n,118p,479b,712s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 115i,7n,118p,491b,769s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/
 share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/
 texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on ER-diagram.pdf (1 page, 47362 bytes).
+Output written on ER-diagram.pdf (1 page, 48758 bytes).
 PDF statistics:
  26 PDF objects out of 1000 (max. 8388607)
  16 compressed objects within 1 object stream

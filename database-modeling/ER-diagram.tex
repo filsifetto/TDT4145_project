@@ -7,25 +7,26 @@
 \documentclass[border=10pt]{standalone}
 \usepackage{xcolor}
 \usepackage{tikz-er2}
-\usetikzlibrary{positioning}
+\usetikzlibrary{positioning,arrows.meta}
 
 \definecolor{entityblue}{RGB}{173, 216, 230}
 \newcommand{\entnavn}[1]{\normalfont\textbf{#1}}
 
 \begin{document}
 \begin{tikzpicture}[
+  >={Stealth[length=3mm, width=2.2mm]},
   every entity/.style={
     fill=entityblue,
-    minimum width=2.6cm,
-    minimum height=2.2cm,
+    minimum width=2.5cm,
+    minimum height=2cm,
     align=left,
     font=\itshape,
     inner sep=4pt,
   },
   every weak entity/.style={
     fill=entityblue,
-    minimum width=2.6cm,
-    minimum height=2.2cm,
+    minimum width=2.5cm,
+    minimum height=2cm,
     align=left,
     font=\itshape,
     inner sep=4pt,
@@ -33,21 +34,21 @@
   every relationship/.style={
     fill=entityblue,
     aspect=2,
-    minimum width=1.5cm,
-    minimum height=1cm,
+    minimum width=1.4cm,
+    minimum height=0.9cm,
     inner sep=2pt,
   },
   every ident relationship/.style={
     fill=entityblue,
     aspect=2,
-    minimum width=1.5cm,
-    minimum height=1cm,
+    minimum width=1.4cm,
+    minimum height=0.9cm,
     inner sep=2pt,
   }
 ]
 
-  % === VENSTRE KOLONNE: Senter-stammen + Gruppeaktivitet ===
-  \node[entity] (senter) at (0, 10) {\entnavn{Senter}\\
+  % ========== SONE 1: Senter og Fasilitet (øverst) ==========
+  \node[entity] (senter) at (0, 21) {\entnavn{Senter}\\
     \key{ID}\\
     navn\\
     adresse\\
@@ -57,73 +58,120 @@
     stengetid\\
     bemannet\_fra\\
     bemannet\_til};
-  \node[ident relationship] (senter-sal) at (0, 7) {\normalsize har\_sal};
-  \node[weak entity] (sal) at (0, 4) {\entnavn{Sal}\\
+  \node[relationship] (senter-fasilitet) at (6, 21) {\normalsize har};
+  \node[entity] (fasilitet) at (12, 21) {\entnavn{Fasilitet}\\
+    \key{ID}\\
+    type\\
+    beskrivelse};
+
+  % ========== SONE 2: Senter → Sal → Tredemølle / Sykkel (venstre vertikal kjede) ==========
+  \node[ident relationship] (senter-sal) at (0, 15) {\normalsize har\_sal};
+  \node[weak entity] (sal) at (0, 9) {\entnavn{Sal}\\
     \dashuline{ID}\\
     type\\
     kapasitet};
-  \node[ident relationship] (sal-tredemolle) at (-3.5, 4) {\normalsize har\_tredemølle};
-  \node[weak entity] (tredemolle) at (-3.5, 1) {\entnavn{Tredemølle}\\
+  \node[ident relationship] (sal-tredemolle) at (-6, 9) {\normalsize har\_tredemølle};
+  \node[weak entity] (tredemolle) at (-6, 3) {\entnavn{Tredemølle}\\
     \dashuline{nummer}\\
     produsent\\
     maksimal\_hastighet\\
     maksimal\_stigning};
-  \node[ident relationship] (sal-sykkel) at (0, 1) {\normalsize har\_sykkel};
-  \node[weak entity] (sykkel) at (0, -2) {\entnavn{Sykkel}\\
+  \node[ident relationship] (sal-sykkel) at (0, 4.5) {\normalsize har\_sykkel};
+  \node[weak entity] (sykkel) at (0, 0) {\entnavn{Sykkel}\\
     \dashuline{nummer}\\
     bluetooth};
-  \node[entity] (gruppe) at (0, -5) {\entnavn{Gruppeaktivitet}\\
+
+  % ========== SONE 3: Idrettslagstime (sentrum) – booket_for fra Sal ==========
+  \node[entity] (idrettslagstime) at (7.5, 6) {\entnavn{Idrettslagstime}\\
     \key{ID}\\
-    type\\
+    tidsrom\\
+    \hspace{1em} start\\
+    \hspace{1em} slutt\\
+    beskrivelse};
+  \node[relationship] (booket-for-sal) at (3.5, 7.5) {\normalsize booket\_for};
+  \node[relationship] (booket-for-gruppe) at (4, 2.5) {\normalsize booket\_for};
+  \node[relationship] (arrangerer) at (12, 6) {\normalsize arrangerer};
+  \node[entity] (idrett) at (16.5, 6) {\entnavn{Idrettslag}\\
+    \key{ID}\\
+    navn\\
     beskrivelse};
 
-  % === ØVERSTE RAD: Senter -- har -- Fasilitet ===
-  \node[relationship] (senter-fasilitet) at (4, 10) {\normalsize har};
-  \node[entity] (fasilitet) at (8, 10) {\entnavn{Fasilitet}\\
+  % ========== SONE 4: Gruppeaktivitet og Brukerprofil ==========
+  \node[entity] (gruppe) at (7.5, -4.5) {\entnavn{Gruppeaktivitet}\\
     \key{ID}\\
     type\\
+    tidsrom\\
+    \hspace{1em} start\\
+    \hspace{1em} slutt\\
     beskrivelse};
-
-  % === MIDTRAD: Gruppeaktivitet -- ansvarlig_for -- Brukerprofil -- har_økt -- Økt ===
-  \node[relationship] (ansvarlig-for) at (4, -5) {\normalsize ansvarlig\_for};
-  \node[entity] (bruker) at (8, -2) {\entnavn{Brukerprofil}\\
+  \node[relationship] (ansvarlig-for) at (11, -4.5) {\normalsize ansvarlig\_for};
+  \node[relationship] (deltar) at (11, -2) {\normalsize deltar};
+  \node[relationship] (pameldt-til) at (11, -7) {\normalsize påmeldt\_til};
+  \node[entity] (bruker) at (16.5, -4.5) {\entnavn{Brukerprofil}\\
     \key{ID}\\
     navn\\
     epost\\
     telefon};
-  \node[ident relationship] (bruker-okt) at (11, -2) {\normalsize har\_økt};
-  \node[weak entity] (okt) at (14, -2) {\entnavn{Økt}\\
+
+  % ========== SONE 5: Brukerprofil → Økt og Prikk ==========
+  \node[ident relationship] (bruker-okt) at (20, -4.5) {\normalsize har\_økt};
+  \node[weak entity] (okt) at (24, -4.5) {\entnavn{Økt}\\
     \dashuline{ID}\\
     innsjekk\\
     utsjekk};
-
-  % === HØYRE KOLONNE: er_medlem, Idrettslag, har_prikk, Prikk ===
-  \node[relationship] (er-medlem) at (12, 1) {\normalsize er\_medlem};
-  \node[entity] (idrett) at (18, 4) {\entnavn{Idrettslag}\\
-    \key{ID}\\
-    navn\\
-    beskrivelse};
-  \node[ident relationship] (bruker-prikk) at (18, -5) {\normalsize har\_prikk};
-  \node[weak entity] (prikk) at (18, -8) {\entnavn{Prikk}\\
+  \node[ident relationship] (bruker-prikk) at (20, -9) {\normalsize har\_prikk};
+  \node[weak entity] (prikk) at (24, -9) {\entnavn{Prikk}\\
     \dashuline{dato\_fikk\_prikk}};
 
-  % Kantene med pilnotasjon for kardinalitet (pil fra relasjon mot «én»-siden)
+  % ========== Kanter ==========
+  % Senter -- har -- Fasilitet
   \draw (senter.east) -- (senter-fasilitet.west);
   \draw (fasilitet.west) -- (senter-fasilitet.east);
-  \draw (senter.south) -- (senter-sal.north);
-  \draw[double, double distance=1.5pt] (senter-sal.south) -> (sal.north);
-  \draw (sal.west) -- (sal-tredemolle.east);
-  \draw[double, double distance=1.5pt] (sal-tredemolle.south) -> (tredemolle.north);
-  \draw (sal.south) -- (sal-sykkel.north);
-  \draw[double, double distance=1.5pt] (sal-sykkel.south) -> (sykkel.north);
-  \draw (ansvarlig-for.west) -> (gruppe.east);
-  \draw (ansvarlig-for.east) -- (bruker.west);
-  \draw (bruker.east) -- (bruker-okt.west);
-  \draw[double, double distance=1.5pt] (bruker-okt.east) -> (okt.west);
-  \draw (bruker.south east) -- (bruker-prikk.north west);
-  \draw[double, double distance=1.5pt] (bruker-prikk.south east) -> (prikk.north west);
-  \draw (bruker.north east) -- (er-medlem.south west);
-  \draw (idrett.south west) -- (er-medlem.north east);
+
+  % Senter -- har_sal -- Sal
+  \draw[->] (senter-sal.north) -- (senter.south);
+  \draw[double, double distance=1.5pt] (senter-sal.south) -- (sal.north);
+
+  % Sal -- har_tredemølle -- Tredemølle
+  \draw[->] (sal-tredemolle.east) -- (sal.west);
+  \draw[double, double distance=1.5pt] (sal-tredemolle.south) -- (tredemolle.north);
+
+  % Sal -- har_sykkel -- Sykkel
+  \draw[->] (sal-sykkel.north) -- (sal.south);
+  \draw[double, double distance=1.5pt] (sal-sykkel.south) -- (sykkel.north);
+
+  % Sal -- booket_for -- Idrettslagstime
+  \draw[->] (booket-for-sal.west) -- (sal.east);
+  \draw[double, double distance=1.5pt] (idrettslagstime.west) -- (booket-for-sal.east);
+
+  % Sal -- booket_for -- Gruppeaktivitet
+  \draw[->] (booket-for-gruppe.west) -- (sal.east);
+  \draw[double, double distance=1.5pt] (gruppe.north west) -- (booket-for-gruppe.south east);
+
+  % Idrettslagstime -- arrangerer -- Idrettslag
+  \draw[double, double distance=1.5pt] (idrettslagstime.east) -- (arrangerer.west);
+  \draw[->] (arrangerer.east) -- (idrett.west);
+
+  % Idrettslag -- er_medlem -- Brukerprofil
+  \node[relationship] (er-medlem) at (16.5, 0.5) {\normalsize er\_medlem};
+  \draw (bruker.north) -- (er-medlem.south);
+  \draw (idrett.south) -- (er-medlem.north);
+
+  % Gruppeaktivitet -- deltar / ansvarlig_for / påmeldt_til -- Brukerprofil
+  \draw[double, double distance=1.5pt] (gruppe.east) -- (ansvarlig-for.west);
+  \draw[->] (ansvarlig-for.east) -- (bruker.west);
+  \draw (gruppe.north east) -- (deltar.south west);
+  \draw (bruker.north west) -- (deltar.south east);
+  \draw (gruppe.south east) -- (pameldt-til.north west);
+  \draw (bruker.south west) -- (pameldt-til.north east);
+
+  % Brukerprofil -- har_økt -- Økt
+  \draw[->] (bruker-okt.west) -- (bruker.east);
+  \draw[double, double distance=1.5pt] (bruker-okt.east) -- (okt.west);
+
+  % Brukerprofil -- har_prikk -- Prikk
+  \draw[->] (bruker-prikk.north west) -- (bruker.south east);
+  \draw[double, double distance=1.5pt] (bruker-prikk.south east) -- (prikk.north west);
 
 \end{tikzpicture}
 \end{document}
