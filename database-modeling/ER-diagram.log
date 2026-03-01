@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.3.1)  1 MAR 2026 15:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.3.1)  1 MAR 2026 15:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -467,10 +467,10 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./ER-diagram.aux) ) 
 Here is how much of TeX's memory you used:
- 14063 strings out of 480171
- 301556 string characters out of 5894490
- 586841 words of memory out of 5000000
- 31789 multiletter control sequences out of 15000+600000
+ 14074 strings out of 480171
+ 301855 string characters out of 5894490
+ 592220 words of memory out of 5000000
+ 31800 multiletter control sequences out of 15000+600000
  470019 words of font info for 31 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  115i,7n,118p,491b,769s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -478,7 +478,7 @@ Here is how much of TeX's memory you used:
 share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/
 texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on ER-diagram.pdf (1 page, 48325 bytes).
+Output written on ER-diagram.pdf (1 page, 47951 bytes).
 PDF statistics:
  26 PDF objects out of 1000 (max. 8388607)
  16 compressed objects within 1 object stream

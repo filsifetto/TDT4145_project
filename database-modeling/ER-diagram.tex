@@ -54,12 +54,14 @@
     adresse\\
     \hspace{1em} gate\\
     \hspace{1em} nummer\\
-    åpningstid\\
-    stengetid\\
-    bemannet\_fra\\
-    bemannet\_til};
-  \node[relationship] (senter-fasilitet) at (7.5, 26) {\normalsize har};
-  \node[entity] (fasilitet) at (15, 26) {\entnavn{Fasilitet}\\
+    åpningstider\\
+    \hspace{1em} fra\\
+    \hspace{1em} til\\
+    bemannet\\
+    \hspace{1em} fra\\
+    \hspace{1em} til};
+  \node[relationship] (senter-fasilitet) at (9, 26) {\normalsize har};
+  \node[entity] (fasilitet) at (18, 26) {\entnavn{Fasilitet}\\
     \key{ID}\\
     type\\
     beskrivelse};
@@ -91,13 +93,18 @@
     beskrivelse};
   \node[ident relationship] (booket-for-sal) at (4.5, 9) {\normalsize booket\_for};
   \node[ident relationship] (booket-for-gruppe) at (5, 3) {\normalsize booket\_for};
-  \node[relationship] (arrangerer) at (15, 7.5) {\normalsize arrangerer};
-  \node[entity] (idrett) at (21, 7.5) {\entnavn{Idrettslag}\\
+  \node[relationship] (arrangerer) at (14, 7.5) {\normalsize arrangerer};
+  \node[weak entity] (gruppe-entitet) at (18, 7.5) {\entnavn{Gruppe}\\
+    \dashuline{ID}\\
+    type\\
+    beskrivelse};
+  \node[ident relationship] (idrett-har-gruppe) at (23, 7.5) {\normalsize har\_gruppe};
+  \node[entity] (idrett) at (28, 7.5) {\entnavn{Idrettslag}\\
     \key{ID}\\
     navn\\
     beskrivelse};
 
-  % ========== SONE 4: Gruppeaktivitet (svak av Sal) og Brukerprofil ==========
+  % ========== SONE 4: Gruppeaktivitet (svak av Sal) og Profil ==========
   \node[weak entity] (gruppe) at (9.5, -5.5) {\entnavn{Gruppeaktivitet}\\
     \dashuline{ID}\\
     type\\
@@ -105,20 +112,24 @@
     \hspace{1em} start\\
     \hspace{1em} slutt\\
     beskrivelse};
-  \node[relationship] (instruktor-for) at (14, -2.5) {\normalsize instruktør\_for};
-  \node[relationship] (moter-til) at (14, -5.5) {\normalsize møter\_til};
-  \node[attribute] (moter-til-tidspunkt) at (14, -7.2) {\itshape tidspunkt};
-  \node[relationship] (pameldt-til) at (14, -8.5) {\normalsize påmeldt\_til};
-  \node[entity] (bruker) at (21, -5.5) {\entnavn{Brukerprofil}\\
+  \node[relationship] (instruktor-for) at (16, -2.5) {\normalsize instruktør\_for};
+  \node[relationship] (moter-til) at (16, -5.5) {\normalsize møter\_til};
+  \node[attribute] (moter-til-tidspunkt) at (16, -7.2) {\itshape tidspunkt};
+  \node[relationship] (pameldt-til) at (16, -8.5) {\normalsize påmeldt\_til};
+  \node[entity] (bruker) at (24, -5.5) {\entnavn{Profil}\\
     \key{ID}\\
+    type\\
     navn\\
+    \hspace{1em} fornavn\\
+    \hspace{1em} etternavn\\
     epost\\
     telefon};
 
-  % ========== SONE 5: Brukerprofil → Prikk ==========
-  \node[ident relationship] (bruker-prikk) at (25, -11) {\normalsize har\_prikk};
-  \node[weak entity] (prikk) at (30, -11) {\entnavn{Prikk}\\
-    \dashuline{dato\_fikk\_prikk}};
+  % ========== SONE 5: Profil → Prikk ==========
+  \node[ident relationship] (bruker-prikk) at (27, -8.5) {\normalsize har\_prikk};
+  \node[weak entity] (prikk) at (32, -8.5) {\entnavn{Prikk}\\
+    \dashuline{ID}\\
+    dato};
 
   % ========== Kanter ==========
   % Senter -- har -- Fasilitet
@@ -145,16 +156,20 @@
   \draw[->] (booket-for-gruppe.west) -- (sal.east);
   \draw[double, double distance=1.5pt] (booket-for-gruppe.south east) -- (gruppe.north west);
 
-  % Idrettslagstime -- arrangerer -- Idrettslag
+  % Idrettslagstime -- arrangerer -- Gruppe
   \draw[double, double distance=1.5pt] (idrettslagstime.east) -- (arrangerer.west);
-  \draw[->] (arrangerer.east) -- (idrett.west);
+  \draw[->] (arrangerer.east) -- (gruppe-entitet.west);
 
-  % Idrettslag -- er_medlem -- Brukerprofil
-  \node[relationship] (er-medlem) at (21, 0.5) {\normalsize er\_medlem};
+  % Gruppe -- har_gruppe (ident.) -- Idrettslag (Gruppe til venstre)
+  \draw[double, double distance=1.5pt] (idrett-har-gruppe.west) -- (gruppe-entitet.east);
+  \draw[->] (idrett-har-gruppe.east) -- (idrett.west);
+
+  % Idrettslag -- er_medlem -- Profil
+  \node[relationship] (er-medlem) at (28, 0.5) {\normalsize er\_medlem};
   \draw (bruker.north) -- (er-medlem.south);
   \draw (idrett.south) -- (er-medlem.north);
 
-  % Gruppeaktivitet -- instruktør_for / møter_til / påmeldt_til -- Brukerprofil (anker slik at linjene ikke krysser)
+  % Gruppeaktivitet -- instruktør_for / møter_til / påmeldt_til -- Profil (anker slik at linjene ikke krysser)
   \draw[double, double distance=1.5pt] (gruppe.north east) -- (instruktor-for.south west);
   \draw[->] (instruktor-for.south east) -- (bruker.north west);
   \draw (gruppe.east) -- (moter-til.west);
@@ -163,9 +178,9 @@
   \draw (gruppe.south east) -- (pameldt-til.north west);
   \draw (bruker.south west) -- (pameldt-til.north east);
 
-  % Brukerprofil -- har_prikk -- Prikk
+  % Profil -- har_prikk -- Prikk
   \draw[->] (bruker-prikk.north west) -- (bruker.south east);
-  \draw[double, double distance=1.5pt] (bruker-prikk.south east) -- (prikk.north west);
+  \draw[double, double distance=1.5pt] (bruker-prikk.east) -- (prikk.west);
 
 \end{tikzpicture}
 \end{document}
