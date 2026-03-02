@@ -1,3 +1,126 @@
 \section{ER-diagram oversatt til relasjonsskjema}
 
-% --- Skriv her: Presenter relasjonsskjemaet som er utledet fra ER-diagrammet. ---
+% Hjelpemakroer for nøkkelnotasjon
+% \pk{}   = primærnøkkel (understreket)
+% \fk{}   = fremmednøkkel (kursiv)
+% \pkfk{} = primær- og fremmednøkkel (understreket kursiv)
+\newcommand{\pk}[1]{\underline{#1}}
+\newcommand{\fk}[1]{\textit{#1}}
+\newcommand{\pkfk}[1]{\underline{\textit{#1}}}
+
+Tabellene under er utledet direkte fra ER-diagrammet \autoref{fig:er-diagram} ved standardregelen for
+ER-til-relasjonsoversetting. Primærnøkler er \pk{understreket}, fremmednøkler er \fk{kursive},
+og attributter som er både primær- og fremmednøkkel er \pkfk{understreket kursive}.
+
+\subsection{Relasjonsskjema}
+
+\begin{description}[leftmargin=0pt, labelwidth=0pt, labelsep=0pt]
+
+  \item \textbf{Fasilitet}(\pk{ID}, type, beskrivelse)
+
+  \item \textbf{Senter}(\pk{ID}, navn, gate, nummer, fra, til)
+
+  \item \textbf{har}(\pkfk{senter\_ID}, \pkfk{fasilitet\_ID})
+  \begin{itemize}
+    \item \fk{senter\_ID} $\to$ Senter(\pk{ID})
+    \item \fk{fasilitet\_ID} $\to$ Fasilitet(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Bemanning}(\pkfk{senter\_ID}, \pk{dag}, start, slutt)
+  \begin{itemize}
+    \item \fk{senter\_ID} $\to$ Senter(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Sal}(\pkfk{senter\_ID}, \pk{ID}, type, kapasitet)
+  \begin{itemize}
+    \item \fk{senter\_ID} $\to$ Senter(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Tredemølle}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{nummer}, produsent, maks\_hastighet, maks\_stigning)
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}) $\to$ Sal(\pk{senter\_ID}, \pk{ID})
+  \end{itemize}
+
+  \item \textbf{Sykkel}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{nummer}, bluetooth)
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}) $\to$ Sal(\pk{senter\_ID}, \pk{ID})
+  \end{itemize}
+
+  \item \textbf{Idrettslag}(\pk{ID}, navn, beskrivelse)
+
+  \item \textbf{Gruppe}(\pkfk{idrettslags\_ID}, \pk{ID}, type, beskrivelse)
+  \begin{itemize}
+    \item \fk{idrettslags\_ID} $\to$ Idrettslag(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Idrettslagstime}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, type, start, slutt, dato, beskrivelse, \fk{idrettslags\_ID}, \fk{gruppe\_ID})
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}) $\to$ Sal(\pk{senter\_ID}, \pk{ID})
+    \item (\fk{idrettslags\_ID}, \fk{gruppe\_ID}) $\to$ Gruppe(\pk{idrettslags\_ID}, \pk{ID})
+  \end{itemize}
+
+  \item \textbf{Profil}(\pk{ID}, type, fornavn, etternavn, epost, telefon)
+
+  \item \textbf{er\_medlem}(\pkfk{idrettslags\_ID}, \pkfk{profil\_ID})
+  \begin{itemize}
+    \item \fk{idrettslags\_ID} $\to$ Idrettslag(\pk{ID})
+    \item \fk{profil\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{møter\_til\_idrett}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{idrettslagstime\_ID}, \pkfk{profil\_ID})
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{idrettslagstime\_ID}) $\to$ Idrettslagstime(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+    \item \fk{profil\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Gruppeaktivitet}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, type, start, slutt, dato, beskrivelse, \fk{instrukt\_ID})
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}) $\to$ Sal(\pk{senter\_ID}, \pk{ID})
+    \item \fk{instrukt\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{møter\_til\_gruppe}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{gruppeaktivitet\_ID}, \pkfk{profil\_ID}, tidspunkt)
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{gruppeaktivitet\_ID}) $\to$ Gruppeaktivitet(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+    \item \fk{profil\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{påmeldt\_til}(\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{gruppeaktivitet\_ID}, \pkfk{profil\_ID}, påmelding\_nummer)
+  \begin{itemize}
+    \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{gruppeaktivitet\_ID}) $\to$ Gruppeaktivitet(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+    \item \fk{profil\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+  \item \textbf{Prikk}(\pkfk{profil\_ID}, \pk{ID}, dato)
+  \begin{itemize}
+    \item \fk{profil\_ID} $\to$ Profil(\pk{ID})
+  \end{itemize}
+
+\end{description}
+
+\subsection{Normalformanalyse}
+
+Alle tabellene er på \textbf{BCNF} (Boyce–Codd normalform).
+En relasjon er på BCNF dersom venstre side i enhver ikke-triviell funksjonell avhengighet er en supernøkkel.
+Nedenfor begrunnes dette gruppevis.
+
+\paragraph{Sterke entiteter – Fasilitet, Senter, Idrettslag, Profil.}
+Disse har én enkeltattributt som primærnøkkel (\textit{ID}).
+Alle øvrige attributter bestemmes entydig av \textit{ID}, og det finnes ingen andre funksjonelle
+avhengigheter. Dermed er venstre side i enhver ikke-triviell FD en supernøkkel, og tabellene er på BCNF.
+
+\paragraph{Svake entiteter – Bemanning, Sal, Tredemølle, Sykkel, Idrettslagstime, Gruppeaktivitet, Gruppe, Prikk.}
+ER-til-relasjonsoversettingen av svake entiteter gir en sammensatt primærnøkkel bestående av
+eierens primærnøkkel og diskriminatoren. Alle ikke-nøkkelattributter avhenger funksjonelt av hele
+primærnøkkelen og ingen delmengde av den, slik at det ikke finnes partielle avhengigheter.
+Det finnes heller ingen transitive avhengigheter gjennom ikke-nøkkelattributter.
+Alle disse tabellene er derfor på BCNF.
+
+\paragraph{M:N-relasjoner uten ekstra attributter – har, er\_medlem, møter\_til\_idrett.}
+Alle attributter inngår i primærnøkkelen. Det finnes ingen ikke-trivielle funksjonelle avhengigheter
+utover de trivielle, og tabellene er derfor trivielt på BCNF.
+
+\paragraph{M:N-relasjoner med attributter – møter\_til\_gruppe, påmeldt\_til.}
+Primærnøkkelen er sammensatt av alle fire fremmednøkkelattributtene.
+Attributtene \textit{tidspunkt} og \textit{påmelding\_nummer} avhenger av hele primærnøkkelen,
+og det finnes ingen andre FD-er. Tabellene er på BCNF.
