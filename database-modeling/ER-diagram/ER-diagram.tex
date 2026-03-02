@@ -85,6 +85,12 @@
     \dashuline{nummer}\\
     bluetooth};
 
+  % Aktivitet (under sykkel, til venstre for gruppeaktivitet)
+  \node[entity] (aktivitet) at (0, -5.5) {\entnavn{Aktivitet}\\
+    \key{navn}\\
+    kategori\\
+    beskrivelse};
+
   % ========== SONE 3: Idrettslagstime (svak av Sal) – booket_for fra Sal ==========
   \node[weak entity] (idrettslagstime) at (9.5, 7.5) {\entnavn{Idrettslagstime}\\
     \dashuline{ID}\\
@@ -111,20 +117,19 @@
   \node[relationship] (moter-til-idrettslagstime) at (17, 2) {\normalsize møter\_til};
 
   % ========== SONE 4: Gruppeaktivitet (svak av Sal) og Profil ==========
-  \node[weak entity] (gruppe) at (9.5, -5.5) {\entnavn{Gruppeaktivitet}\\
+  \node[relationship] (aktivitet-er-type) at (6, -5.5) {\normalsize er\_type};
+  \node[weak entity] (gruppe) at (10, -5.5) {\entnavn{Gruppeaktivitet}\\
     \dashuline{ID}\\
-    type\\
     tidsrom\\
     \hspace{1em} start\\
     \hspace{1em} slutt\\
-    \hspace{1em} dato\\
-    beskrivelse};
-  \node[relationship] (instruktor-for) at (16, -2.5) {\normalsize instruktør\_for};
-  \node[relationship] (moter-til) at (16, -5.5) {\normalsize møter\_til};
-  \node[attribute] (moter-til-tidspunkt) at (16, -7.2) {\itshape tidspunkt};
-  \node[relationship] (pameldt-til) at (16, -8.5) {\normalsize påmeldt\_til};
-  \node[attribute] (pameldt-til-pamelding-nummer) at (16, -10.2) {\itshape påmelding\_nummer};
-  \node[entity] (bruker) at (24, -5.5) {\entnavn{Profil}\\
+    \hspace{1em} dato};
+  \node[relationship] (instruktor-for) at (14.5, -2.5) {\normalsize instruktør\_for};
+  \node[relationship] (moter-til) at (14.5, -5.5) {\normalsize møter\_til};
+  \node[attribute] (moter-til-tidspunkt) at (14.5, -7.2) {\itshape tidspunkt};
+  \node[relationship] (pameldt-til) at (14.5, -8.5) {\normalsize påmeldt\_til};
+  \node[attribute] (pameldt-til-pamelding-nummer) at (14.5, -10.2) {\itshape påmelding\_nummer};
+  \node[entity] (bruker) at (21, -5.5) {\entnavn{Profil}\\
     \key{ID}\\
     type\\
     navn\\
@@ -134,8 +139,8 @@
     telefon};
 
   % ========== SONE 5: Profil → Prikk ==========
-  \node[ident relationship] (bruker-prikk) at (27, -8.5) {\normalsize har\_prikk};
-  \node[weak entity] (prikk) at (32, -8.5) {\entnavn{Prikk}\\
+  \node[ident relationship] (bruker-prikk) at (22, -8.5) {\normalsize har\_prikk};
+  \node[weak entity] (prikk) at (27, -8.5) {\entnavn{Prikk}\\
     \dashuline{ID}\\
     dato};
 
@@ -168,6 +173,10 @@
   \draw[->] (booket-for-gruppe.west) -- (sal.east);
   \draw[double, double distance=1.5pt] (booket-for-gruppe.south east) -- (gruppe.north west);
 
+  % Aktivitet (1) -- er_type -- Gruppeaktivitet (n): enkel strek med pil mot Aktivitet, dobbel mot Gruppeaktivitet
+  \draw[->] (aktivitet-er-type.west) -- (aktivitet.east);
+  \draw[double, double distance=1.5pt] (aktivitet-er-type.east) -- (gruppe.west);
+
   % Idrettslagstime -- arrangerer -- Gruppe
   \draw[double, double distance=1.5pt] (idrettslagstime.east) -- (arrangerer.west);
   \draw[->] (arrangerer.east) -- (gruppe-entitet.west);
@@ -177,7 +186,7 @@
   \draw[->] (idrett-har-gruppe.east) -- (idrett.west);
 
   % Idrettslag -- er_medlem -- Profil
-  \node[relationship] (er-medlem) at (28, 0.5) {\normalsize er\_medlem};
+  \node[relationship] (er-medlem) at (23, 0.5) {\normalsize er\_medlem};
   \draw (bruker.north) -- (er-medlem.south);
   \draw (idrett.south) -- (er-medlem.north);
 
