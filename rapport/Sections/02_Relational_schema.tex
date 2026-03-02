@@ -1,3 +1,40 @@
 \section{ER-diagram oversatt til relasjonsskjema}
 
-% --- Skriv her: Presenter relasjonsskjemaet som er utledet fra ER-diagrammet. ---
+Relasjonsskjemaet under er utledet direkte fra ER-diagrammet ved
+standardreglene for ER-til-relasjonsoversetting.
+Primærnøkler er \underline{understreket}, fremmednøkler er \textit{kursive},
+og attributter som er begge deler er \underline{\textit{understreket kursive}}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio]{database-modeling/relational-schema/relational-schema.pdf}
+    \caption{Relasjonsskjema utledet fra ER-diagrammet.}
+    \label{fig:relational-schema}
+\end{figure}
+
+\subsection{Normalformanalyse}
+
+Alle tabellene er på \textbf{BCNF} (Boyce–Codd normalform).
+En relasjon er på BCNF dersom venstre side i enhver ikke-triviell funksjonell avhengighet er en supernøkkel.
+Nedenfor begrunnes dette gruppevis.
+
+\paragraph{Sterke entiteter – Fasilitet, Senter, Idrettslag, Profil.}
+Disse har én enkeltattributt som primærnøkkel (\textit{ID}).
+Alle øvrige attributter bestemmes entydig av \textit{ID}, og det finnes ingen andre funksjonelle
+avhengigheter. Dermed er venstre side i enhver ikke-triviell FD en supernøkkel, og tabellene er på BCNF.
+
+\paragraph{Svake entiteter – Bemanning, Sal, Tredemølle, Sykkel, Idrettslagstime, Gruppeaktivitet, Gruppe, Prikk.}
+ER-til-relasjonsoversettingen av svake entiteter gir en sammensatt primærnøkkel bestående av
+eierens primærnøkkel og diskriminatoren. Alle ikke-nøkkelattributter avhenger funksjonelt av hele
+primærnøkkelen og ingen delmengde av den, slik at det ikke finnes partielle avhengigheter.
+Det finnes heller ingen transitive avhengigheter gjennom ikke-nøkkelattributter.
+Alle disse tabellene er derfor på BCNF.
+
+\paragraph{M:N-relasjoner uten ekstra attributter – har, er\_medlem, møter\_til\_idrett.}
+Alle attributter inngår i primærnøkkelen. Det finnes ingen ikke-trivielle funksjonelle avhengigheter
+utover de trivielle, og tabellene er derfor trivielt på BCNF.
+
+\paragraph{M:N-relasjoner med attributter – møter\_til\_gruppe, påmeldt\_til.}
+Primærnøkkelen er sammensatt av alle fire fremmednøkkelattributtene.
+Attributtene \textit{tidspunkt} og \textit{påmelding\_nummer} avhenger av hele primærnøkkelen,
+og det finnes ingen andre FD-er. Tabellene er på BCNF.
