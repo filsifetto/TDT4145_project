@@ -21,9 +21,10 @@
     fonttitle=\normalsize\bfseries,
     boxrule=0.6pt,
     arc=2pt,
-    left=8pt, right=8pt, top=3pt, bottom=5pt,
-    toptitle=3pt, bottomtitle=3pt,
+    left=8pt, right=8pt, top=2pt, bottom=4pt,
+    toptitle=2pt, bottomtitle=2pt,
     fontupper=\normalsize,
+    before upper={\setlength{\baselineskip}{13pt}},
   }
 }
 
@@ -31,9 +32,10 @@
   \begin{tcolorbox}[schemabox, title=#1]
     #2
   \end{tcolorbox}%
-  \vspace{5pt}%
+  \vspace{12pt}%
 }
 
+\begin{document}
 \begin{document}
 \begin{minipage}[t]{5.4cm}
 
@@ -43,7 +45,7 @@
     beskrivelse
   }
 
-  \rel{har}{
+  \rel{har\_fasilitet}{
     \pkfk{senter\_ID}\\
     \pkfk{fasilitet\_ID}
   }
