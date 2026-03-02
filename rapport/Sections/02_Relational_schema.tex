@@ -5,12 +5,112 @@ standardreglene for ER-til-relasjonsoversetting.
 Primærnøkler er \underline{understreket}, fremmednøkler er \textit{kursive},
 og attributter som er begge deler er \underline{\textit{understreket kursive}}.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{database-modeling/relational-schema/relational-schema.pdf}
-    \caption{Relasjonsskjema utledet fra ER-diagrammet.}
-    \label{fig:relational-schema}
-\end{figure}
+% Makroer for relasjonsskjema
+\newcommand{\pk}[1]{\underline{#1}}
+\newcommand{\fk}[1]{\textit{#1}}
+\newcommand{\pkfk}[1]{\underline{\textit{#1}}}
+
+\newcommand{\rel}[2]{\noindent\textbf{#1}(#2)}
+\newenvironment{fklist}{%
+  \begin{itemize}[noitemsep, topsep=1pt, leftmargin=1.5em, label={$\bullet$}]%
+}{%
+  \end{itemize}\vspace{6pt}%
+}
+
+\vspace{4pt}
+
+% ── Sterke entiteter ──────────────────────────────────────────────────────────
+\rel{Fasilitet}{\pk{ID}, type, beskrivelse}
+
+\vspace{6pt}
+
+\rel{Senter}{\pk{ID}, navn, gate, nummer, fra, til}
+
+\vspace{6pt}
+
+\rel{Idrettslag}{\pk{ID}, navn, beskrivelse}
+
+\vspace{6pt}
+
+\rel{Profil}{\pk{ID}, type, fornavn, etternavn, epost, telefon}
+
+\vspace{10pt}
+
+% ── Avhengige entiteter ───────────────────────────────────────────────────────
+\rel{har\_fasilitet}{\pkfk{senter\_ID}, \pkfk{fasilitet\_ID}}
+\begin{fklist}
+  \item \fk{senter\_ID} $\rightarrow$ Senter(\pk{ID})
+  \item \fk{fasilitet\_ID} $\rightarrow$ Fasilitet(\pk{ID})
+\end{fklist}
+
+\rel{Bemanning}{\pkfk{senter\_ID}, \pk{dag}, start, slutt}
+\begin{fklist}
+  \item \fk{senter\_ID} $\rightarrow$ Senter(\pk{ID})
+\end{fklist}
+
+\rel{Sal}{\pkfk{senter\_ID}, \pk{ID}, type, kapasitet}
+\begin{fklist}
+  \item \fk{senter\_ID} $\rightarrow$ Senter(\pk{ID})
+\end{fklist}
+
+\rel{Tredem\o lle}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{nummer}, produsent, maks\_hastighet, maks\_stigning}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}) $\rightarrow$ Sal(\pk{senter\_ID}, \pk{ID})
+\end{fklist}
+
+\rel{Sykkel}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{nummer}, bluetooth}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}) $\rightarrow$ Sal(\pk{senter\_ID}, \pk{ID})
+\end{fklist}
+
+\rel{Gruppe}{\pkfk{idrettslags\_ID}, \pk{ID}, type, beskrivelse}
+\begin{fklist}
+  \item \fk{idrettslags\_ID} $\rightarrow$ Idrettslag(\pk{ID})
+\end{fklist}
+
+\rel{Prikk}{\pkfk{profil\_ID}, \pk{ID}, dato}
+\begin{fklist}
+  \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\rel{er\_medlem}{\pkfk{idrettslags\_ID}, \pkfk{profil\_ID}}
+\begin{fklist}
+  \item \fk{idrettslags\_ID} $\rightarrow$ Idrettslag(\pk{ID})
+  \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\rel{Idrettslagstime}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, type, start, slutt, dato, beskrivelse, \fk{idrettslags\_ID}, \fk{gruppe\_ID}}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}) $\rightarrow$ Sal(\pk{senter\_ID}, \pk{ID})
+  \item \fk{idrettslags\_ID} $\rightarrow$ Idrettslag(\pk{ID})
+  \item (\fk{idrettslags\_ID}, \fk{gruppe\_ID}) $\rightarrow$ Gruppe(\pk{idrettslags\_ID}, \pk{ID})
+\end{fklist}
+
+\rel{m\o ter\_til\_idrett}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{idrettslagstime\_ID}, \pkfk{profil\_ID}}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{idrettslagstime\_ID}) $\rightarrow$ Idrettslagstime(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+  \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\rel{Gruppeaktivitet}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, type, start, slutt, dato, beskrivelse, \fk{instrukt\_ID}}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}) $\rightarrow$ Sal(\pk{senter\_ID}, \pk{ID})
+  \item \fk{instrukt\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\rel{m\o ter\_til\_gruppe}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{gruppeaktivitet\_ID}, \pkfk{profil\_ID}, tidspunkt}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{gruppeaktivitet\_ID}) $\rightarrow$ Gruppeaktivitet(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+  \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\rel{p{\aa}meldt\_til}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pkfk{gruppeaktivitet\_ID}, \pkfk{profil\_ID}, p{\aa}melding\_nummer}
+\begin{fklist}
+  \item (\fk{senter\_ID}, \fk{sal\_ID}, \fk{gruppeaktivitet\_ID}) $\rightarrow$ Gruppeaktivitet(\pk{senter\_ID}, \pk{sal\_ID}, \pk{ID})
+  \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
+\end{fklist}
+
+\vspace{4pt}
 
 \subsection{Normalformanalyse}
 
@@ -30,7 +130,7 @@ primærnøkkelen og ingen delmengde av den, slik at det ikke finnes partielle av
 Det finnes heller ingen transitive avhengigheter gjennom ikke-nøkkelattributter.
 Alle disse tabellene er derfor på BCNF.
 
-\paragraph{M:N-relasjoner uten ekstra attributter – har, er\_medlem, møter\_til\_idrett.}
+\paragraph{M:N-relasjoner uten ekstra attributter – har\_fasilitet, er\_medlem, møter\_til\_idrett.}
 Alle attributter inngår i primærnøkkelen. Det finnes ingen ikke-trivielle funksjonelle avhengigheter
 utover de trivielle, og tabellene er derfor trivielt på BCNF.
 
