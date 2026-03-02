@@ -47,6 +47,7 @@
   }
 ]
 
+  \begin{scope}[yscale=1.35]
   % ========== SONE 1: Senter og Fasilitet (øverst) ==========
   \node[entity] (senter) at (0, 26) {\entnavn{Senter}\\
     \key{ID}\\
@@ -208,5 +209,6 @@
   \draw[->] (bruker-prikk.north west) -- (bruker.south east);
   \draw[double, double distance=1.5pt] (bruker-prikk.east) -- (prikk.west);
 
+  \end{scope}
 \end{tikzpicture}
 \end{document}
