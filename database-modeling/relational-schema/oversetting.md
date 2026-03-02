@@ -22,7 +22,7 @@ moter_til_idrett(senter_ID pk fk(Senter), sal_ID pk fk(Sal),idrettslagstime_ID p
 
 er_medlem(idrettslags_ID pk fk(Idrettslag), profil_ID pk fk(Profil))
 
-Gruppeaktivitet(senter_ID pk fk(Senter), sal_ID pk fk(Sal), ID pk, type, start, slutt, dato, beskrivelse, instrukt_ID fk (Profil))
+Gruppeaktivitet(senter_ID pk fk(Senter), sal_ID pk fk(Sal), ID pk, type, start, slutt, dato, aktivitet_navn fk (Aktivitet), instrukt_ID fk (Profil))
 
 moter_til_gruppe(senter_ID pk fk(Senter), sal_ID pk fk(Sal), gruppeaktivitet_ID pk fk(Gruppeaktivitet), profil_ID pk fk(Profil), tidspunkt)
 
@@ -31,3 +31,5 @@ pameldt_til(senter_ID pk fk(Senter), sal_ID pk fk(Sal), gruppeaktivitet_ID pk fk
 Prikk(profil_ID pk fk(Profil), ID pk, dato)
 
 Profil(ID pk, type, fornavn, etternavn, epost, telefon)
+
+Aktivitet(navn pk, kategori, beskrivelse)

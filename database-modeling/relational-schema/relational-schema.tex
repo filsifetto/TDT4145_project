@@ -174,6 +174,12 @@
     telefon
   }
 
+  \rel{Aktivitet}{
+    \pk{navn}\\
+    kategori\\
+    beskrivelse
+  }
+
   \rel{Gruppeaktivitet}{
     \pkfk{senter\_ID}\\
     \pkfk{sal\_ID}\\
@@ -182,7 +188,7 @@
     start\\
     slutt\\
     dato\\
-    beskrivelse\\
+    \fk{aktivitet\_navn}\\
     \fk{instrukt\_ID}
   }
 
