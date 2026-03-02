@@ -1,0 +1,192 @@
+% Kompiler med: pdflatex relational-schema.tex
+\documentclass[border=8pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[normalem]{ulem}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+
+\definecolor{entityblue}{RGB}{173, 216, 230}
+
+\newcommand{\pk}[1]{\underline{#1}}
+\newcommand{\fk}[1]{\textit{#1}}
+\newcommand{\pkfk}[1]{\underline{\textit{#1}}}
+
+\tcbset{
+  schemabox/.style={
+    colback=white,
+    colframe=black!65,
+    colbacktitle=entityblue,
+    coltitle=black,
+    fonttitle=\normalsize\bfseries,
+    boxrule=0.6pt,
+    arc=2pt,
+    left=8pt, right=8pt, top=3pt, bottom=5pt,
+    toptitle=3pt, bottomtitle=3pt,
+    fontupper=\normalsize,
+  }
+}
+
+\newcommand{\rel}[2]{%
+  \begin{tcolorbox}[schemabox, title=#1]
+    #2
+  \end{tcolorbox}%
+  \vspace{5pt}%
+}
+
+\begin{document}
+\begin{minipage}[t]{5.4cm}
+
+  \rel{Fasilitet}{
+    \pk{ID}\\
+    type\\
+    beskrivelse
+  }
+
+  \rel{har}{
+    \pkfk{senter\_ID}\\
+    \pkfk{fasilitet\_ID}
+  }
+
+  \rel{Bemanning}{
+    \pkfk{senter\_ID}\\
+    \pk{dag}\\
+    start\\
+    slutt
+  }
+
+  \rel{Sykkel}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pk{nummer}\\
+    bluetooth
+  }
+
+\end{minipage}%
+\hspace{8pt}%
+\begin{minipage}[t]{5.6cm}
+
+  \rel{Senter}{
+    \pk{ID}\\
+    navn\\
+    gate\\
+    nummer\\
+    fra\\
+    til
+  }
+
+  \rel{Sal}{
+    \pkfk{senter\_ID}\\
+    \pk{ID}\\
+    type\\
+    kapasitet
+  }
+
+  \rel{Tredem\o lle}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pk{nummer}\\
+    produsent\\
+    maks\_hastighet\\
+    maks\_stigning
+  }
+
+\end{minipage}%
+\hspace{8pt}%
+\begin{minipage}[t]{5.8cm}
+
+  \rel{Idrettslag}{
+    \pk{ID}\\
+    navn\\
+    beskrivelse
+  }
+
+  \rel{Gruppe}{
+    \pkfk{idrettslags\_ID}\\
+    \pk{ID}\\
+    type\\
+    beskrivelse
+  }
+
+  \rel{er\_medlem}{
+    \pkfk{idrettslags\_ID}\\
+    \pkfk{profil\_ID}
+  }
+
+  \rel{m\o ter\_til\_idrett}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pkfk{idrettslagstime\_ID}\\
+    \pkfk{profil\_ID}
+  }
+
+  \rel{Prikk}{
+    \pkfk{profil\_ID}\\
+    \pk{ID}\\
+    dato
+  }
+
+\end{minipage}%
+\hspace{8pt}%
+\begin{minipage}[t]{6.6cm}
+
+  \rel{Idrettslagstime}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pk{ID}\\
+    type\\
+    start\\
+    slutt\\
+    dato\\
+    beskrivelse\\
+    \fk{idrettslags\_ID}\\
+    \fk{gruppe\_ID}
+  }
+
+  \rel{m\o ter\_til\_gruppe}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pkfk{gruppeaktivitet\_ID}\\
+    \pkfk{profil\_ID}\\
+    tidspunkt
+  }
+
+  \rel{p{\aa}meldt\_til}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pkfk{gruppeaktivitet\_ID}\\
+    \pkfk{profil\_ID}\\
+    p{\aa}melding\_nummer
+  }
+
+\end{minipage}%
+\hspace{8pt}%
+\begin{minipage}[t]{6.6cm}
+
+  \rel{Profil}{
+    \pk{ID}\\
+    type\\
+    fornavn\\
+    etternavn\\
+    epost\\
+    telefon
+  }
+
+  \rel{Gruppeaktivitet}{
+    \pkfk{senter\_ID}\\
+    \pkfk{sal\_ID}\\
+    \pk{ID}\\
+    type\\
+    start\\
+    slutt\\
+    dato\\
+    beskrivelse\\
+    \fk{instrukt\_ID}
+  }
+
+\end{minipage}
+
+\vspace{6pt}
+{\small \underline{Attributtnavn} = primærnøkkel \quad \textit{Attributtnavn} = fremmednøkkel \quad \underline{\textit{Attributtnavn}} = begge}
+
+\end{document}
