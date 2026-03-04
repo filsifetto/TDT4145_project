@@ -96,7 +96,7 @@ og attributter som er begge deler er \underline{\textit{understreket kursive}}.
   \item \fk{profil\_ID} $\rightarrow$ Profil(\pk{ID})
 \end{fklist}
 
-\rel{Gruppeaktivitet}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, type, start, slutt, dato, \fk{aktivitet\_navn}, \fk{instrukt\_ID}}
+\rel{Gruppeaktivitet}{\pkfk{senter\_ID}, \pkfk{sal\_ID}, \pk{ID}, start, slutt, dato, \fk{aktivitet\_navn}, \fk{instrukt\_ID}}
 \begin{fklist}
   \item (\fk{senter\_ID}, \fk{sal\_ID}) $\rightarrow$ Sal(\pk{senter\_ID}, \pk{ID})
   \item \fk{aktivitet\_navn} $\rightarrow$ Aktivitet(\pk{navn})
