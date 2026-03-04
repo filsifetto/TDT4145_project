@@ -15,6 +15,7 @@ Følgende antakelser er gjort:
 
 \begin{enumerate}
     \item \textbf{Fasiliteter.} Vi har én entitet for fasiliteter med \textit{type} som attributt (f.eks.\ badstue, garderobe, øvelsesrom). Problembeskrivelsen tolkes slik at det viktige er å beskrive hvilke fasiliteter senteret har, ikke attributtene til hver fasilitetstype. En alternativ modellering ville vært å splitte opp i flere entity sets.
+    Deltagelsen fra Fasilitet i \textit{har}-relasjonen er partiell, slik at en fasilitet kan eksistere i systemet uten å være tilknyttet et senter. Dette forenkler vedlikehold: fasiliteter kan opprettes på forhånd og fjernes fra et senter uten å måtte slettes fra databasen.
     \item \textbf{Bemanning.} Bemanningstidspunktene antas like fra uke til uke; \textit{dag} er derfor brukt som diskriminator (eng, discriminator).
      Vi tolker at det viktige er \textit{når} senteret er bemannet,
       ikke hvem som bemanner. Bemanning kunne alternativt vært koblet til Profil.
