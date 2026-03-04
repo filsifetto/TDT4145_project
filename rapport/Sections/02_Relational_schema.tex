@@ -123,10 +123,17 @@ Alle tabellene er på \textbf{BCNF} (Boyce–Codd normalform).
 En relasjon er på BCNF dersom venstre side i enhver ikke-triviell funksjonell avhengighet er en supernøkkel.
 Nedenfor begrunnes dette gruppevis.
 
-\paragraph{Sterke entiteter – Fasilitet, Senter, Idrettslag, Profil, Aktivitet.}
+\paragraph{Sterke entiteter – Fasilitet, Senter, Idrettslag, Aktivitet.}
 Disse har én enkeltattributt som primærnøkkel (\textit{ID}, resp.\ \textit{navn} for Aktivitet).
 Alle øvrige attributter bestemmes entydig av primærnøkkelen, og det finnes ingen andre funksjonelle
 avhengigheter. Dermed er venstre side i enhver ikke-triviell FD en supernøkkel, og tabellene er på BCNF.
+
+\paragraph{Profil.}
+Primærnøkkelen er \textit{ID}. I tillegg er \textit{epost} unik for hver profil
+(brukstilfellene identifiserer brukere ved epostadresse), slik at
+\textit{epost} $\rightarrow$ \textit{ID, type, fornavn, etternavn, telefon}
+også er en ikke-triviell FD. Venstresiden er en kandidatnøkkel og dermed en supernøkkel,
+så BCNF er oppfylt.
 
 \paragraph{Svake entiteter – Bemanning, Sal, Tredemølle, Sykkel, Idrettslagstime, Gruppeaktivitet, Gruppe, Prikk.}
 ER-til-relasjonsoversettingen av svake entiteter gir en sammensatt primærnøkkel bestående av
@@ -139,7 +146,14 @@ Alle disse tabellene er derfor på BCNF.
 Alle attributter inngår i primærnøkkelen. Det finnes ingen ikke-trivielle funksjonelle avhengigheter
 utover de trivielle, og tabellene er derfor trivielt på BCNF.
 
-\paragraph{M:N-relasjoner med attributter – møter\_til\_gruppe, påmeldt\_til.}
+\paragraph{møter\_til\_gruppe.}
 Primærnøkkelen er sammensatt av alle fire fremmednøkkelattributtene.
-Attributtene \textit{tidspunkt} og \textit{påmelding\_nummer} avhenger av hele primærnøkkelen,
-og det finnes ingen andre FD-er. Tabellene er på BCNF.
+\textit{tidspunkt} avhenger funksjonelt av hele primærnøkkelen, og det finnes
+ingen andre ikke-trivielle FD-er. Tabellen er på BCNF.
+
+\paragraph{påmeldt\_til.}
+Primærnøkkelen er (\textit{senter\_ID, sal\_ID, gruppeaktivitet\_ID, profil\_ID}).
+\textit{påmelding\_nummer} er unikt innenfor én gruppeaktivitet (kølapp-semantikk),
+slik at (\textit{senter\_ID, sal\_ID, gruppeaktivitet\_ID, påmelding\_nummer}) $\rightarrow$ \textit{profil\_ID}
+også er en ikke-triviell FD. Venstresiden er en kandidatnøkkel og dermed en supernøkkel.
+Begge ikke-trivielle FD-er har altså en supernøkkel på venstresiden, og tabellen er på BCNF.
