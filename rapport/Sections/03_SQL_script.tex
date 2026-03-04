@@ -1,3 +1,71 @@
 \section{SQL-script}
 
-% --- Skriv her: Legg inn eller referer til SQL-script (f.eks. CREATE TABLE, indekser, evt. eksempeldata). ---
+SQL-scriptet under oppretter alle tabellene i databasen med primær- og
+fremmednøkler samt \texttt{CHECK}- og \texttt{UNIQUE}-restriksjoner.
+Scriptet er skrevet for SQLite.
+
+\lstinputlisting[
+  language=SQL,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!40!black},
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  showstringspaces=false,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  extendedchars=true,
+  inputencoding=utf8,
+  literate=
+    {å}{{\aa}}1
+    {ø}{{\o}}1
+    {æ}{{\ae}}1
+    {Å}{{\AA}}1
+    {Ø}{{\O}}1
+    {Æ}{{\AE}}1,
+  caption={SQL-script for opprettelse av tabeller.},
+  label={lst:sql-script}
+]{../sql/create_tables.sql}
+
+\subsection{Restriksjoner håndtert i applikasjonskode}
+
+Følgende restriksjoner kan ikke uttrykkes med \texttt{CREATE TABLE}-definisjoner
+alene og må derfor håndheves i applikasjonsprogrammene:
+
+\begin{enumerate}
+    \item \textbf{Prikk ved manglende/for sen oppmøte.}
+    En profil som er påmeldt en gruppeaktivitet uten å registrere oppmøte
+    senest 5 minutter før start, skal få en prikk.
+    Regelen krever tidsberegning og kan ikke fanges av en enkel \texttt{CHECK}-restriksjon.
+
+    \item \textbf{Utestengelse (svartelisting).}
+    Dersom en profil har $\geq$ 3 prikker innenfor de siste 30 dagene,
+    skal profilen utestenges fra elektronisk booking inntil den eldste
+    av de tre prikkene er eldre enn 30 dager.
+
+    \item \textbf{Oppmøte etter aktivitetens slutt.}
+    Det skal ikke være mulig å registrere oppmøte til en aktivitet
+    etter at den er ferdig.
+
+    \item \textbf{Én booking per sal per tidspunkt.}
+    For et gitt tidspunkt kan en sal kun ha én gruppeaktivitet eller
+    én idrettslagstime. Overlappsjekk krever intervallsammenligning
+    og kan ikke uttrykkes med \texttt{UNIQUE} alene.
+
+    \item \textbf{Medlemskap for idrettslagstime.}
+    En profil må være medlem av idrettslaget (via \texttt{er\_medlem})
+    for å kunne møte til en idrettslagstime.
+
+    \item \textbf{Avbestillingsfrist.}
+    Avbestilling av en gruppeaktivitet må skje senest 1 time før
+    aktivitetens start.
+
+    \item \textbf{Publiseringsfrist.}
+    En gruppeaktivitet legges ut for booking tidligst 48 timer før
+    den holdes.
+
+    \item \textbf{Instruktørrolle.}
+    Kun profiler med \texttt{type = 'ansatt'} skal kunne settes som
+    instruktør for en gruppeaktivitet.
+\end{enumerate}
