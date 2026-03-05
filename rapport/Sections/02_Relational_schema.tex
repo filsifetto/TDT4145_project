@@ -137,10 +137,9 @@ så BCNF er oppfylt.
 
 \paragraph{Svake entiteter – Bemanning, Sal, Tredemølle, Sykkel, Idrettslagstime, Gruppeaktivitet, Gruppe, Prikk.}
 ER-til-relasjonsoversettingen av svake entiteter gir en sammensatt primærnøkkel bestående av
-eierens primærnøkkel og diskriminatoren. Alle ikke-nøkkelattributter avhenger funksjonelt av hele
-primærnøkkelen og ingen delmengde av den, slik at det ikke finnes partielle avhengigheter.
-Det finnes heller ingen transitive avhengigheter gjennom ikke-nøkkelattributter.
-Alle disse tabellene er derfor på BCNF.
+eierens primærnøkkel og diskriminatoren. De eneste ikke-trivielle funksjonelle avhengighetene er
+av formen \(\text{primærnøkkel} \rightarrow \text{øvrige attributter}\), der venstresiden er
+primærnøkkelen og dermed en supernøkkel. BCNF er derfor oppfylt for alle disse tabellene.
 
 \paragraph{M:N-relasjoner uten ekstra attributter – har\_fasilitet, er\_medlem, møter\_til\_idrett.}
 Alle attributter inngår i primærnøkkelen. Det finnes ingen ikke-trivielle funksjonelle avhengigheter
