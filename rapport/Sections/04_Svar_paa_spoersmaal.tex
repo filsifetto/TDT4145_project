@@ -89,9 +89,8 @@ sjekken i bookingsteget.
 \subsection{Statistikk er det noe som må lagres eksplisitt eller går det an å bare gjøre queries
 for å få svar? Diskuter dette.}
 
-De aller fleste statistikkene som SiT etterspør kan utledes med vanlige
-SQL-spørringer mot den normaliserte databasen, uten å lagre
-aggregerte tall eksplisitt.
+Vi mener det meste av statistikken som er relevant for SiT kan utledes med vanlige
+SQL-spørringer mot databasen. Dette vil også gjøre det enklere å oppdatere statistikken hvis det skjer endringer i databasen.
 
 \paragraph{Eksempler på statistikk som kan beregnes med queries.}
 \begin{itemize}
@@ -111,47 +110,6 @@ aggregerte tall eksplisitt.
           innenfor de siste 30 dagene.
 \end{itemize}
 
-\paragraph{Tilfeller der eksplisitt lagring kan være nødvendig.}
-Problemet oppstår når underliggende data endrer seg over tid og man
-trenger historiske toppverdier.
-Det viktigste eksempelet er \emph{det maksimale antallet påmeldte per økt}.
-Dersom en bruker melder seg av en økt og raden slettes fra
-\textit{påmeldt\_til}, mister man informasjon om at det på et
-tidspunkt var flere påmeldte.
-Med kun gjeldende data kan man finne nåværende antall påmeldte,
-men ikke det historisk høyeste antallet.
-
-Merk at \textit{påmeldt\_til} kan inneholde både bekreftede plasser
-og ventelisteplasser (rader der \texttt{påmelding\_nummer} $>$
-\textit{Sal.kapasitet}).
-Avhengig av hva man ønsker å måle, totalt antall registrerte eller
-kun bekreftede plasser, må spørringen filtrere tilsvarende.
-
-For å bevare den historiske toppverdien finnes flere alternativer:
-\begin{enumerate}
-    \item Legge til et felt \texttt{maks\_påmeldte} på
-          \textit{Gruppeaktivitet} som oppdateres ved hver ny påmelding.
-          I SQLite kan dette vedlikeholdes automatisk med en
-          \texttt{AFTER INSERT}-trigger på \textit{påmeldt\_til} som
-          teller antall rader for den aktuelle gruppeaktiviteten og
-          oppdaterer feltet dersom det nye antallet overstiger
-          gjeldende verdi.
-    \item Beholde avmeldte rader med en statuskolonne (\emph{soft delete})
-          i stedet for å slette dem, slik at man alltid kan telle
-          det totale antallet som har vært påmeldt.
-          Ulempen er at alle andre spørringer mot \textit{påmeldt\_til}
-          (f.eks.\ kapasitetssjekk ved booking) da må filtrere på status,
-          noe som øker kompleksiteten i applikasjonskoden.
-    \item Bruke \texttt{påmelding\_nummer} som tilnærming:
-          siden nummeret tildeles sekvensielt, gir
-          \texttt{MAX(påmelding\_nummer)} blant gjenværende rader et
-          estimat, men verdien blir upresis ved avmeldinger, spesielt
-          dersom personen (eller personene) med høyest nummer melder seg av.
-\end{enumerate}
-
 \paragraph{Konklusjon.}
-Statistikk trenger i hovedsak \emph{ikke} lagres eksplisitt i vår modell, det meste kan utledes av de normaliserte tabellene med vanlige
-SQL-spørringer.
-Unntaket er historiske toppverdier, som det maksimale antallet
-påmeldte per økt, der man enten må lagre verdien eksplisitt eller
-benytte en "myk-slette-strategi" ("soft delete") for å unngå tap av informasjon.
+Statistikk trenger \emph{ikke} lagres eksplisitt i vår modell;
+alt kan utledes av de normaliserte tabellene med vanlige SQL-spørringer.

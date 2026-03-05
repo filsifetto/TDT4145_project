@@ -18,8 +18,7 @@
 --   4. Én booking per sal per tidspunkt (4 triggere: insert/update x 2 tabeller)
 --   5. Medlemskap for idrettslagstime
 --   6. Avbestillingsfrist (senest 1 time før start)
---   7. Publiseringsfrist (tidligst 48 timer før aktiviteten holdes)
---   8. Instruktørrolle (kun ansatte kan settes som instruktør)
+--   7. Instruktørrolle (kun ansatte kan settes som instruktør)
 --
 -- ============================================================================
 
