@@ -3,6 +3,9 @@
 \ProvidesPackage{packages}[2021/04/20 Packages]
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[english,norsk]{babel}
+% Sikrer at norsk er aktivt språk ved dokumentstart, selv etter biblatex-initialisering
+\AtBeginDocument{\selectlanguage{norsk}}
 
 % --- Appendices ---
 \usepackage{appendix}
