@@ -15,9 +15,6 @@
 --      innenfor de siste 30 dagene, skal profilen utestenges fra elektronisk
 --      booking inntil den eldste av de tre prikkene er eldre enn 30 dager.
 --
---   3. Oppmøte etter aktivitetens slutt: Det skal ikke være mulig å
---      registrere oppmøte til en aktivitet etter at den er ferdig.
---
 --   4. Én booking per sal per tidspunkt: For et gitt tidspunkt kan en sal
 --      kun ha én gruppeaktivitet eller én idrettslagstime.  Overlappsjekk
 --      krever intervallsammenligning og kan ikke uttrykkes med UNIQUE alene.
@@ -31,8 +28,6 @@
 --   7. Publiseringsfrist: En gruppeaktivitet legges ut for booking tidligst
 --      48 timer før den holdes.
 --
---   8. Instruktørrolle: Kun profiler med type = 'ansatt' skal kunne
---      settes som instruktør for en gruppeaktivitet.
 -- ============================================================================
 
 PRAGMA foreign_keys = ON;
@@ -224,3 +219,58 @@ CREATE TABLE påmeldt_til (
         REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID),
     FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
 );
+
+CREATE TRIGGER check_instruktør_rolle
+BEFORE INSERT ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    IF NEW.instrukt_ID NOT IN (SELECT ID FROM Profil WHERE type = 'ansatt') THEN
+        RAISE (ABORT, 'Instruktør må være ansatt for å kunne settes som instruktør for en gruppeaktivitet.');
+    END IF;
+END;
+
+CREATE TRIGGER check_medlemskap_idrett
+BEFORE INSERT ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    IF NEW.profil_ID NOT IN (SELECT profil_ID FROM er_medlem WHERE idrettslags_ID = NEW.idrettslags_ID) THEN
+        RAISE (ABORT, 'Profilen må være medlem av idrettslaget for å kunne møte til en idrettslagstime.');
+    END IF;
+END;
+
+
+create trigger check_instruktør_rolle_update
+BEFORE UPDATE ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    IF NEW.instrukt_ID NOT IN (SELECT ID FROM Profil WHERE type = 'ansatt') THEN
+        RAISE (ABORT, 'Instruktør må være ansatt for å kunne settes som instruktør for en gruppeaktivitet.');
+    END IF;
+END;
+
+CREATE TRIGGER check_medlemskap_idrett_update
+BEFORE UPDATE ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    IF NEW.profil_ID NOT IN (SELECT profil_ID FROM er_medlem WHERE idrettslags_ID = NEW.idrettslags_ID) THEN
+        RAISE (ABORT, 'Profilen må være medlem av idrettslaget for å kunne møte til en idrettslagstime.');
+    END IF;
+END;
+
+CREATE TRIGGER check_møter_til_idrett_time
+BEFORE INSERT ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    IF NEW.idrettslagstime_ID.slutt < NEW.tidspunkt THEN
+        RAISE (ABORT, 'Møtet kan ikke være etter idrettslagstimenes slutt tidspunkt.');
+    END IF;
+END;
+
+CREATE TRIGGER check_påmeldt_til_time
+BEFORE INSERT ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    IF NEW.gruppeaktivitet_ID.slutt < NEW.tidspunkt THEN
+        RAISE (ABORT, 'Påmeldingen kan ikke være etter gruppeaktivitetens slutt tidspunkt.');
+    END IF;
+END;
