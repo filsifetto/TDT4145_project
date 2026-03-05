@@ -63,10 +63,17 @@
 \urlstyle{sf}
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 
-% --- Language (norsk for rapporten; bruk [english,norsk] + norsk-captions når norsk.ldf er installert) ---
+% --- Language ---
 \usepackage[english]{babel}
-\renewcommand{\listfigurename}{Liste med figurer}
-\AtBeginDocument{\selectlanguage{english}}
+\AtBeginDocument{
+    \renewcommand{\contentsname}{Innhold}
+    \renewcommand{\listfigurename}{Figurer}
+    \renewcommand{\listtablename}{Tabeller}
+    \renewcommand{\figurename}{Figur}
+    \renewcommand{\tablename}{Tabell}
+    \renewcommand{\refname}{Referanser}
+    \renewcommand{\abstractname}{Sammendrag}
+}
 
 % --- Main matter ---
 \newcommand{\mainmatter}{
