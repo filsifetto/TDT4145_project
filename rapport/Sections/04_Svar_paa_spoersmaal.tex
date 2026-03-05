@@ -68,7 +68,8 @@ registrere oppmøte senest 5~minutter før start.
 Grunnlaget for dette er \textbf{brukstilfelle~3} (registrering av
 oppmøte): det er oppmøteregistreringene i \textit{møter\_til\_gruppe}
 som gjør det mulig å avgjøre hvem som \emph{ikke} har møtt.
-Selve tildelingen av prikker skjer i et eget brukstilfelle; \emph{tildeling av prikker etter oppmøtefrist},
+Selve tildelingen av prikker skjer i et eget brukstilfelle;
+\emph{tildeling av prikker etter oppmøtefrist},
 som etter at oppmøtefristen har passert (5~minutter før start),
 sammenligner \textit{påmeldt\_til} med \textit{møter\_til\_gruppe}
 og oppretter en rad i \textit{Prikk} for de som ikke har møtt.
@@ -76,15 +77,21 @@ Når en profil har fått $\geq 3$ prikker innenfor de siste 30 dagene,
 er den utestengt.
 
 \paragraph{Sjekk.}
-Utestengelsen bør testes for i \textbf{brukstilfelle~2} (booking).
-Før en booking godkjennes, sjekker applikasjonen antall prikker
-for profilen innenfor de siste 30 dagene.
-Dersom det er $\geq 3$, avvises bookingen.
+Utestengelsessjekken er implementert direkte i databasen ved hjelp av
+to triggere på tabellen \textit{påmeldt\_til}:
+\begin{itemize}
+    \item \texttt{check\_utestengelse\_insert} – kjøres \texttt{BEFORE INSERT}
+    \item \texttt{check\_utestengelse\_update} – kjøres \texttt{BEFORE UPDATE}
+\end{itemize}
+Dersom profilen har $\geq 3$ prikker de siste 30 dagene, avbrytes
+operasjonen med \texttt{RAISE(ABORT, \ldots)}.
+Sjekken trenger derfor ikke implementeres i applikasjonslaget
+– databasen håndhever regelen automatisk ved hvert forsøk på påmelding.
 
 Brukstilfelle~6 demonstrerer svartelistingsmekanismen eksplisitt, men
-den naturlige utløseren i et produksjonssystem er
-brukstilfellet for prikk-tildeling beskrevet over, kombinert med
-sjekken i bookingsteget.
+den naturlige triggeren i et produksjonssystem er brukstilfellet for
+prikk-tildeling beskrevet over, kombinert med triggerne i databasen
+som blokkerer påmelding ved utestengelse.
 
 \subsection{Statistikk er det noe som må lagres eksplisitt eller går det an å bare gjøre queries
 for å få svar? Diskuter dette.}
