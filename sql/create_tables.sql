@@ -8,25 +8,22 @@
 --
 --   1. Prikk ved manglende/for sen oppmøte: En profil som er påmeldt en
 --      gruppeaktivitet uten å registrere oppmøte senest 5 minutter før start
---      skal få en prikk.  Regelen krever tidsberegning og kan ikke fanges av
---      en enkel CHECK-restriksjon.
+--      skal få en prikk. Regelen krever tidsberegning utenfor databasen.
 --
 --   2. Utestengelse (svartelisting): Dersom en profil har >= 3 prikker
 --      innenfor de siste 30 dagene, skal profilen utestenges fra elektronisk
---      booking inntil den eldste av de tre prikkene er eldre enn 30 dager.
+--      booking. Applikasjonen må sjekke prikkhistorikk ved booking.
+--   3. En aktivitet skal publiseres 48 timer før den holdes. Dette 
+--      er vanskelig å håndtere med triggere, ettersom det ville krevd at aktiviteten
+--      ble publisert nøyaktig 48 timer før den holdes.
 --
---   4. Én booking per sal per tidspunkt: For et gitt tidspunkt kan en sal
---      kun ha én gruppeaktivitet eller én idrettslagstime.  Overlappsjekk
---      krever intervallsammenligning og kan ikke uttrykkes med UNIQUE alene.
+-- Restriksjoner håndhevet med triggere (se nederst i filen):
 --
---   5. Medlemskap for idrettslagstime: En profil må være medlem av
---      idrettslaget (via er_medlem) for å kunne møte til en idrettslagstime.
---
---   6. Avbestillingsfrist: Avbestilling av en gruppeaktivitet må skje senest
---      1 time før aktivitetens start.
---
---   7. Publiseringsfrist: En gruppeaktivitet legges ut for booking tidligst
---      48 timer før den holdes.
+--   3. Oppmøte etter aktivitetens slutt
+--   4. Én booking per sal per tidspunkt
+--   5. Medlemskap for idrettslagstime
+--   6. Avbestillingsfrist (senest 1 time før start)
+--   7. Instruktørrolle (kun ansatte kan settes som instruktør)
 --
 -- ============================================================================
 
@@ -220,57 +217,142 @@ CREATE TABLE påmeldt_til (
     FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
 );
 
-CREATE TRIGGER check_instruktør_rolle
-BEFORE INSERT ON Gruppeaktivitet
+-- ============================================================================
+-- Triggere
+-- ============================================================================
+
+CREATE TRIGGER check_møter_til_gruppe_etter_slutt
+BEFORE INSERT ON møter_til_gruppe
 FOR EACH ROW
 BEGIN
-    IF NEW.instrukt_ID NOT IN (SELECT ID FROM Profil WHERE type = 'ansatt') THEN
-        RAISE (ABORT, 'Instruktør må være ansatt for å kunne settes som instruktør for en gruppeaktivitet.');
-    END IF;
+    SELECT RAISE(ABORT, 'Kan ikke registrere oppmøte etter gruppeaktivitetens slutt.')
+    WHERE NEW.tidspunkt > (
+        SELECT dato || ' ' || slutt
+        FROM Gruppeaktivitet
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND ID        = NEW.gruppeaktivitet_ID
+    );
 END;
 
-CREATE TRIGGER check_medlemskap_idrett
+CREATE TRIGGER check_møter_til_idrett_etter_slutt
 BEFORE INSERT ON møter_til_idrett
 FOR EACH ROW
 BEGIN
-    IF NEW.profil_ID NOT IN (SELECT profil_ID FROM er_medlem WHERE idrettslags_ID = NEW.idrettslags_ID) THEN
-        RAISE (ABORT, 'Profilen må være medlem av idrettslaget for å kunne møte til en idrettslagstime.');
-    END IF;
+    SELECT RAISE(ABORT, 'Kan ikke registrere oppmøte etter idrettslagstime er ferdig.')
+    WHERE datetime('now') > (
+        SELECT dato || ' ' || slutt
+        FROM Idrettslagstime
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND ID        = NEW.idrettslagstime_ID
+    );
 END;
 
-
-create trigger check_instruktør_rolle_update
-BEFORE UPDATE ON Gruppeaktivitet
+CREATE TRIGGER check_sal_booking_gruppe_insert
+BEFORE INSERT ON Gruppeaktivitet
 FOR EACH ROW
 BEGIN
-    IF NEW.instrukt_ID NOT IN (SELECT ID FROM Profil WHERE type = 'ansatt') THEN
-        RAISE (ABORT, 'Instruktør må være ansatt for å kunne settes som instruktør for en gruppeaktivitet.');
-    END IF;
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en gruppeaktivitet i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en idrettslagstime i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Idrettslagstime
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+END;
+
+CREATE TRIGGER check_sal_booking_idrett_insert
+BEFORE INSERT ON Idrettslagstime
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en gruppeaktivitet i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en annen idrettslagstime i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Idrettslagstime
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+END;
+
+CREATE TRIGGER check_medlemskap_idrett_insert
+BEFORE INSERT ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profil må være medlem av idrettslaget for å møte til idrettslagstime.')
+    WHERE NOT EXISTS (
+        SELECT 1 FROM er_medlem em
+        JOIN Idrettslagstime it ON it.idrettslags_ID = em.idrettslags_ID
+        WHERE it.senter_ID = NEW.senter_ID
+          AND it.sal_ID    = NEW.sal_ID
+          AND it.ID        = NEW.idrettslagstime_ID
+          AND em.profil_ID = NEW.profil_ID
+    );
 END;
 
 CREATE TRIGGER check_medlemskap_idrett_update
 BEFORE UPDATE ON møter_til_idrett
 FOR EACH ROW
 BEGIN
-    IF NEW.profil_ID NOT IN (SELECT profil_ID FROM er_medlem WHERE idrettslags_ID = NEW.idrettslags_ID) THEN
-        RAISE (ABORT, 'Profilen må være medlem av idrettslaget for å kunne møte til en idrettslagstime.');
-    END IF;
+    SELECT RAISE(ABORT, 'Profil må være medlem av idrettslaget for å møte til idrettslagstime.')
+    WHERE NOT EXISTS (
+        SELECT 1 FROM er_medlem em
+        JOIN Idrettslagstime it ON it.idrettslags_ID = em.idrettslags_ID
+        WHERE it.senter_ID = NEW.senter_ID
+          AND it.sal_ID    = NEW.sal_ID
+          AND it.ID        = NEW.idrettslagstime_ID
+          AND em.profil_ID = NEW.profil_ID
+    );
 END;
 
-CREATE TRIGGER check_møter_til_idrett_time
-BEFORE INSERT ON møter_til_idrett
+CREATE TRIGGER check_avbestillingsfrist
+BEFORE DELETE ON påmeldt_til
 FOR EACH ROW
 BEGIN
-    IF NEW.idrettslagstime_ID.slutt < NEW.tidspunkt THEN
-        RAISE (ABORT, 'Møtet kan ikke være etter idrettslagstimenes slutt tidspunkt.');
-    END IF;
+    SELECT RAISE(ABORT, 'Avbestilling må skje senest 1 time før aktivitetens start.')
+    WHERE datetime('now') > (
+        SELECT datetime(dato || ' ' || start, '-1 hour')
+        FROM Gruppeaktivitet
+        WHERE senter_ID = OLD.senter_ID
+          AND sal_ID    = OLD.sal_ID
+          AND ID        = OLD.gruppeaktivitet_ID
+    );
 END;
 
-CREATE TRIGGER check_påmeldt_til_time
-BEFORE INSERT ON påmeldt_til
+CREATE TRIGGER check_instruktør_rolle_insert
+BEFORE INSERT ON Gruppeaktivitet
 FOR EACH ROW
 BEGIN
-    IF NEW.gruppeaktivitet_ID.slutt < NEW.tidspunkt THEN
-        RAISE (ABORT, 'Påmeldingen kan ikke være etter gruppeaktivitetens slutt tidspunkt.');
-    END IF;
+    SELECT RAISE(ABORT, 'Instruktør må ha type ansatt.')
+    WHERE (SELECT type FROM Profil WHERE ID = NEW.instrukt_ID) != 'ansatt';
+END;
+
+CREATE TRIGGER check_instruktør_rolle_update
+BEFORE UPDATE ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Instruktør må ha type ansatt.')
+    WHERE (SELECT type FROM Profil WHERE ID = NEW.instrukt_ID) != 'ansatt';
 END;
