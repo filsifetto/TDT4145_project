@@ -1,7 +1,7 @@
 \section{SQL-script}
 
 SQL-scriptet under oppretter alle tabellene i databasen med primær- og
-fremmednøkler samt \texttt{CHECK}- og \texttt{UNIQUE}-restriksjoner.
+fremmednøkler, \texttt{CHECK}-/\texttt{UNIQUE}-restriksjoner samt triggere.
 Scriptet er skrevet for SQLite.
 
 \lstinputlisting[
@@ -23,49 +23,62 @@ Scriptet er skrevet for SQLite.
     {æ}{{\ae}}1
     {Å}{{\AA}}1
     {Ø}{{\O}}1
-    {Æ}{{\AE}}1,
+    {Æ}{{\AE}}1
+    {é}{{\'e}}1
+    {É}{{\'E}}1,
   caption={SQL-script for opprettelse av tabeller.},
   label={lst:sql-script}
 ]{../sql/create_tables.sql}
 
+\subsection{Restriksjoner håndtert med triggere}
+
+Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
+\texttt{CHECK}-restriksjoner i SQLite (SQLite støtter ikke subspørringer i
+\texttt{CHECK}). De håndheves i stedet med \texttt{BEFORE INSERT}/\texttt{UPDATE}/\texttt{DELETE}-triggere:
+
+\begin{enumerate}
+    \item \textbf{Oppmøte etter aktivitetens slutt.}
+    Det skal ikke være mulig å registrere oppmøte til en aktivitet etter at
+    den er ferdig. Triggerne \texttt{check\_møter\_til\_gruppe\_etter\_slutt} og
+    \texttt{check\_møter\_til\_idrett\_etter\_slutt} avviser slike innsettinger.
+
+    \item \textbf{Én booking per sal per tidspunkt.}
+    For et gitt tidsrom kan en sal kun ha én gruppeaktivitet eller én
+    idrettslagstime. Fire triggere (insert/update for hvert av de to tabellene)
+    sjekker at nye og oppdaterte aktiviteter ikke overlapper med eksisterende bookinger.
+
+    \item \textbf{Medlemskap for idrettslagstime.}
+    En profil må være medlem av idrettslaget (via \texttt{er\_medlem}) for å
+    møte til en idrettslagstime.
+
+    \item \textbf{Avbestillingsfrist.}
+    Avbestilling av en gruppeaktivitet må skje senest 1 time før aktivitetens
+    start. Triggeren \texttt{check\_avbestillingsfrist} avviser slettinger fra
+    \texttt{påmeldt\_til} dersom fristen er utløpt.
+
+    \item \textbf{Publiseringsfrist.}
+    En gruppeaktivitet kan tidligst legges ut for booking 48 timer før den
+    holdes. Triggeren \texttt{check\_publiseringsfrist} avviser innsettinger
+    med for lang fremtidshorisont.
+
+    \item \textbf{Instruktørrolle.}
+    Kun profiler med \texttt{type = 'ansatt'} kan settes som instruktør for
+    en gruppeaktivitet.
+\end{enumerate}
+
 \subsection{Restriksjoner håndtert i applikasjonskode}
 
-Følgende restriksjoner kan ikke uttrykkes med \texttt{CREATE TABLE}-definisjoner
-alene og må derfor håndheves i applikasjonsprogrammene:
+Følgende restriksjoner kan ikke håndheves i databasen og må håndteres av
+applikasjonsprogrammene:
 
 \begin{enumerate}
     \item \textbf{Prikk ved manglende/for sen oppmøte.}
     En profil som er påmeldt en gruppeaktivitet uten å registrere oppmøte
     senest 5 minutter før start, skal få en prikk.
-    Regelen krever tidsberegning og kan ikke fanges av en enkel \texttt{CHECK}-restriksjon.
+    Regelen krever tidsberegning og ekstern logikk for å utløse prikken.
 
     \item \textbf{Utestengelse (svartelisting).}
     Dersom en profil har $\geq$ 3 prikker innenfor de siste 30 dagene,
-    skal profilen utestenges fra elektronisk booking inntil den eldste
-    av de tre prikkene er eldre enn 30 dager.
-
-    \item \textbf{Oppmøte etter aktivitetens slutt.}
-    Det skal ikke være mulig å registrere oppmøte til en aktivitet
-    etter at den er ferdig.
-
-    \item \textbf{Én booking per sal per tidspunkt.}
-    For et gitt tidspunkt kan en sal kun ha én gruppeaktivitet eller
-    én idrettslagstime. Overlappsjekk krever intervallsammenligning
-    og kan ikke uttrykkes med \texttt{UNIQUE} alene.
-
-    \item \textbf{Medlemskap for idrettslagstime.}
-    En profil må være medlem av idrettslaget (via \texttt{er\_medlem})
-    for å kunne møte til en idrettslagstime.
-
-    \item \textbf{Avbestillingsfrist.}
-    Avbestilling av en gruppeaktivitet må skje senest 1 time før
-    aktivitetens start.
-
-    \item \textbf{Publiseringsfrist.}
-    En gruppeaktivitet legges ut for booking tidligst 48 timer før
-    den holdes.
-
-    \item \textbf{Instruktørrolle.}
-    Kun profiler med \texttt{type = 'ansatt'} skal kunne settes som
-    instruktør for en gruppeaktivitet.
+    skal profilen utestenges fra elektronisk booking. Applikasjonen må
+    sjekke prikkhistorikk ved booking.
 \end{enumerate}
