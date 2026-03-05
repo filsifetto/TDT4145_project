@@ -41,6 +41,11 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
 \texttt{CHECK}). De håndheves i stedet med \texttt{BEFORE INSERT}/\texttt{UPDATE}/\texttt{DELETE}-triggere:
 
 \begin{enumerate}
+    \item \textbf{Utestengelse (svartelisting).}
+    Dersom en profil har $\geq$ 3 prikker innenfor de siste 30 dagene,
+    utestenges den fra nettbooking. Triggeren \texttt{check\_utestengelse\_insert}
+    gjør at profiler med for mange prikker ikke kan melde seg på en aktivitet.
+
     \item \textbf{Oppmøte etter aktivitetens slutt.}
     Det skal ikke være mulig å registrere oppmøte til en aktivitet etter at
     den er ferdig. Triggerne \texttt{check\_møter\_til\_gruppe\_etter\_slutt} og
@@ -49,7 +54,7 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     \item \textbf{Én booking per sal per tidspunkt.}
     For et gitt tidsrom kan en sal kun ha én gruppeaktivitet eller én
     idrettslagstime. Fire triggere (insert/update for hvert av de to tabellene)
-    sjekker at nye og oppdaterte aktiviteter ikke overlapper med eksisterende bookinger.
+    sjekker at aktiviteter ikke overlapper med eksisterende bookinger.
 
     \item \textbf{Medlemskap for idrettslagstime.}
     En profil må være medlem av idrettslaget (via \texttt{er\_medlem}) for å
@@ -59,11 +64,6 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     Avbestilling av en gruppeaktivitet må skje senest 1 time før aktivitetens
     start. Triggeren \texttt{check\_avbestillingsfrist} avviser slettinger fra
     \texttt{påmeldt\_til} dersom fristen er utløpt.
-
-    \item \textbf{Publiseringsfrist.}
-    En gruppeaktivitet kan tidligst legges ut for booking 48 timer før den
-    holdes. Triggeren \texttt{check\_publiseringsfrist} avviser innsettinger
-    med for lang fremtidshorisont.
 
     \item \textbf{Instruktørrolle.}
     Kun profiler med \texttt{type = 'ansatt'} kan settes som instruktør for
@@ -80,9 +80,5 @@ applikasjonsprogrammene:
     En profil som er påmeldt en gruppeaktivitet uten å registrere oppmøte
     senest 5 minutter før start, skal få en prikk.
     Regelen krever tidsberegning og ekstern logikk for å utløse prikken.
-
-    \item \textbf{Utestengelse (svartelisting).}
-    Dersom en profil har $\geq$ 3 prikker innenfor de siste 30 dagene,
-    skal profilen utestenges fra elektronisk booking. Applikasjonen må
-    sjekke prikkhistorikk ved booking.
+    En mulig løsning er å en gang i døgnet gjøre en sjekk på alle påmeldte profiler for en aktivitet, og gi prikk til de som ikke har møtt opp.
 \end{enumerate}

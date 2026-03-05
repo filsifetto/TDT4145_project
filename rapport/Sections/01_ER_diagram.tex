@@ -22,7 +22,7 @@ Følgende antakelser er gjort:
       Et tredje alternativ ville vært å ha bemanning som en attributt for senteret.
       Ulempen med dette er at vi fort kunne fått null-verdier.
     \item \textbf{Åpningstider.} Vi antar at et treningssenter har samme åpningstider hver dag.
-    \item \textbf{Plasser på aktivitet.} Antall plasser på en aktivitet er definert ut fra kapasiteten til salen aktiviteten foregår i.
+    \item \textbf{Plasser på aktivitet.} Vi antar at antall plasser på en aktivitet er entydig definert ut fra kapasiteten til salen aktiviteten foregår i.
     \item \textbf{Påmelding og kø.} Køsystemet i påmelding tilrettelegges for med et påmeldingsnummer, som fungerer som kølapp.
      For en aktivitet i en sal med kapasitet $n$ regnes de $n$ profilene med lavest påmeldingsnummer som påmeldt, resten står på venteliste.
      For idrettslagstime vil vi bruke et dropin-system, der de $n$ første som møter vil få plass.
@@ -49,6 +49,6 @@ Følgende regler og restriksjoner kan brukes i et system som bygger på modellen
     \item \textbf{Møting etter aktivitetens slutt.} Det skal ikke være mulig å registrere møting til en aktivitet etter aktivitetens slutt.
      (Vi antar at det er mulig å møte frem til aktivitetens slutt. Det betyr ikke at profilen unngår prikk dersom den møter under 5 minutter
       før gruppeaktivitetsstart.) Denne restriksjonen vises ikke i ER-modellen.
-    \item \textbf{Ett tidspunkt, én booking per sal.} For et gitt tidspunkt kan en sal bookes av maksimalt én gruppeaktivitet eller én idrettslagstime. Dette er ikke uttrykt i modellen.
+    \item \textbf{Maks en booking per sal om gangen.} For et gitt tidspunkt kan en sal bookes av maksimalt én gruppeaktivitet eller én idrettslagstime. Dette er ikke uttrykt i modellen.
     \item \textbf{Medlemskap for idrettslagstime.} For at en profil skal kunne møte til en idrettslagstime, må den være medlem av idrettslaget. Dette kravet kommer ikke frem i modellen.
 \end{enumerate}
