@@ -76,15 +76,20 @@ Når en profil har fått $\geq 3$ prikker innenfor de siste 30 dagene,
 er den utestengt.
 
 \paragraph{Sjekk.}
-Utestengelsen bør testes for i \textbf{brukstilfelle~2} (booking).
-Før en booking godkjennes, sjekker applikasjonen antall prikker
-for profilen innenfor de siste 30 dagene.
-Dersom det er $\geq 3$, avvises bookingen.
+Utestengelsessjekken er implementert direkte i databasen ved hjelp av to triggere på tabellen \textit{påmeldt\_til}:
+\begin{itemize}
+    \item \texttt{check\_utestengelse\_insert} – kjøres \texttt{BEFORE INSERT}
+    \item \texttt{check\_utestengelse\_update} – kjøres \texttt{BEFORE UPDATE}
+\end{itemize}
+Dersom profilen har $\geq 3$ prikker de siste 30 dagene, avbrytes
+operasjonen med \texttt{RAISE(ABORT, ...)}.
+Sjekken trenger derfor ikke implementeres i applikasjonslaget –
+databasen håndhever regelen automatisk ved hvert forsøk på påmelding.
 
 Brukstilfelle~6 demonstrerer svartelistingsmekanismen eksplisitt, men
 den naturlige utløseren i et produksjonssystem er
 brukstilfellet for prikk-tildeling beskrevet over, kombinert med
-sjekken i bookingsteget.
+triggerne i databasen som blokkerer påmelding ved utestengelse.
 
 \subsection{Statistikk er det noe som må lagres eksplisitt eller går det an å bare gjøre queries
 for å få svar? Diskuter dette.}
