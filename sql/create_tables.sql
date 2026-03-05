@@ -15,7 +15,7 @@
 --   2. Utestengelse (svartelisting): >= 3 prikker siste 30 dager blokkerer
 --      ny påmelding (check_utestengelse_insert).
 --   3. Oppmøte etter aktivitetens slutt
---   4. Én booking per sal per tidspunkt
+--   4. Én booking per sal per tidspunkt (4 triggere: insert/update x 2 tabeller)
 --   5. Medlemskap for idrettslagstime
 --   6. Avbestillingsfrist (senest 1 time før start)
 --   7. Instruktørrolle (kun ansatte kan settes som instruktør)
@@ -39,8 +39,9 @@ CREATE TABLE Senter (
     navn   TEXT    NOT NULL UNIQUE,
     gate   TEXT    NOT NULL,
     nummer TEXT    NOT NULL,
-    fra    TIME   NOT NULL,
-    til    TIME   NOT NULL
+    fra    TIME    NOT NULL,
+    til    TIME    NOT NULL,
+    CHECK (fra < til)
 );
 
 CREATE TABLE Idrettslag (
@@ -287,6 +288,56 @@ BEGIN
         WHERE senter_ID = NEW.senter_ID
           AND sal_ID    = NEW.sal_ID
           AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+END;
+
+CREATE TRIGGER check_sal_booking_gruppe_update
+BEFORE UPDATE ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en annen gruppeaktivitet i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND ID       != NEW.ID
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en idrettslagstime i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Idrettslagstime
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+END;
+
+CREATE TRIGGER check_sal_booking_idrett_update
+BEFORE UPDATE ON Idrettslagstime
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en gruppeaktivitet i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND NEW.start < slutt
+          AND NEW.slutt > start
+    );
+    SELECT RAISE(ABORT, 'Salen er allerede booket av en annen idrettslagstime i dette tidsrommet.')
+    WHERE EXISTS (
+        SELECT 1 FROM Idrettslagstime
+        WHERE senter_ID = NEW.senter_ID
+          AND sal_ID    = NEW.sal_ID
+          AND dato      = NEW.dato
+          AND ID       != NEW.ID
           AND NEW.start < slutt
           AND NEW.slutt > start
     );
