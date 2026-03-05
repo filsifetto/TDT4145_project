@@ -436,9 +436,7 @@ BEGIN
     );
 END;
 
---
 
--- Overlapp: en bruker kan ikke delta i to aktiviteter som overlapper i tid
 CREATE TRIGGER check_bruker_overlapp_påmeldt_insert
 BEFORE INSERT ON påmeldt_til
 FOR EACH ROW
