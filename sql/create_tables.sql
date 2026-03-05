@@ -10,15 +10,10 @@
 --      gruppeaktivitet uten å registrere oppmøte senest 5 minutter før start
 --      skal få en prikk. Regelen krever tidsberegning utenfor databasen.
 --
---   2. Utestengelse (svartelisting): Dersom en profil har >= 3 prikker
---      innenfor de siste 30 dagene, skal profilen utestenges fra elektronisk
---      booking. Applikasjonen må sjekke prikkhistorikk ved booking.
---   3. En aktivitet skal publiseres 48 timer før den holdes. Dette 
---      er vanskelig å håndtere med triggere, ettersom det ville krevd at aktiviteten
---      ble publisert nøyaktig 48 timer før den holdes.
---
 -- Restriksjoner håndhevet med triggere (se nederst i filen):
 --
+--   2. Utestengelse (svartelisting): >= 3 prikker siste 30 dager blokkerer
+--      ny påmelding (check_utestengelse_insert).
 --   3. Oppmøte etter aktivitetens slutt
 --   4. Én booking per sal per tidspunkt
 --   5. Medlemskap for idrettslagstime
@@ -355,4 +350,28 @@ FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Instruktør må ha type ansatt.')
     WHERE (SELECT type FROM Profil WHERE ID = NEW.instrukt_ID) != 'ansatt';
+END;
+
+CREATE TRIGGER check_utestengelse_insert
+BEFORE INSERT ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er utestengt fra nettbooking: 3 eller flere prikker de siste 30 dagene.')
+    WHERE (
+        SELECT COUNT(*) FROM Prikk
+        WHERE profil_ID = NEW.profil_ID
+          AND dato >= date('now', '-30 days')
+    ) >= 3;
+END;
+
+CREATE TRIGGER check_utestengelse_update
+BEFORE UPDATE ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er utestengt fra nettbooking: 3 eller flere prikker de siste 30 dagene.')
+    WHERE (
+        SELECT COUNT(*) FROM Prikk
+        WHERE profil_ID = NEW.profil_ID
+          AND dato >= date('now', '-30 days')
+    ) >= 3;
 END;
