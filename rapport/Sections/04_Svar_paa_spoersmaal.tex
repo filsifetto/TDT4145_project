@@ -6,21 +6,26 @@ eller må noe slikt implementeres i programvaren}
 
 I vår modell lagres instruktøren for en gruppeaktivitet som fremmednøkkelen
 \textit{instrukt\_ID} i \textit{Gruppeaktivitet}-tabellen.
-Det finnes ingen restriksjon i databaseskjemaet som hindrer at samme
-\textit{instrukt\_ID} opptrer i to gruppeaktiviteter med overlappende
-tidsrom på samme dato.
-
 En \texttt{UNIQUE}-restriksjon kan kun forhindre identiske verdier, ikke
-overlappende \emph{intervaller}.
-To aktiviteter for samme instruktør på samme dato med delvis
-overlappende start-/slutt-tidspunkt ville derfor ikke bli fanget opp.
+overlappende \emph{intervaller}, og kan dermed ikke fange opp to
+gruppeaktiviteter med samme instruktør i overlappende tidsrom.
+
+\paragraph{Løsning via triggere.}
+Vi har implementert to triggere som håndhever regelen direkte i databasen:
+\begin{itemize}
+    \item \texttt{check\_instruktør\_overlapp\_insert} –
+          kjøres \texttt{BEFORE INSERT} på \textit{Gruppeaktivitet}.
+    \item \texttt{check\_instruktør\_overlapp\_update} –
+          kjøres \texttt{BEFORE UPDATE} på \textit{Gruppeaktivitet}.
+\end{itemize}
+Triggerene sjekker om det finnes en annen rad i \textit{Gruppeaktivitet}
+med samme \textit{instrukt\_ID} og \textit{dato} der
+\textit{start}/\textit{slutt}-intervallene overlapper,
+og avbryter med \texttt{RAISE(ABORT, \ldots)} i så fall.
 
 \paragraph{Konklusjon.}
-Denne regelen \emph{kan ikke} uttrykkes i den relasjonelle modellen
-og må derfor implementeres i applikasjonskoden (eller via en trigger).
-Før en gruppeaktivitet opprettes eller oppdateres, må applikasjonen
-sjekke at det ikke allerede finnes en annen aktivitet med samme
-instruktør der tidsintervallet overlapper.
+Regelen kan ikke uttrykkes med den relasjonelle modellen alene, men er
+fullt ut håndterbar i databasen med to triggere på \textit{Gruppeaktivitet}.
 
 \subsection{Det samme spørsmålet for en bruker. Kan dette løses i modellen eller må det
 gjøres i programvaren?}

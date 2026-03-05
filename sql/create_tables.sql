@@ -19,7 +19,9 @@
 --   5. Medlemskap for idrettslagstime
 --   6. Avbestillingsfrist (senest 1 time før start)
 --   7. Instruktørrolle (kun ansatte kan settes som instruktør)
---   8. En bruker kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid
+--   8. En instruktør kan ikke lede to gruppeaktiviteter som overlapper i tid
+--      (check_instruktør_overlapp_insert/update)
+--   9. En bruker kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid
 --      (check_bruker_overlapp_påmeldt_insert/update)
 --
 -- ============================================================================
@@ -403,6 +405,35 @@ FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Instruktør må ha type ansatt.')
     WHERE (SELECT type FROM Profil WHERE ID = NEW.instrukt_ID) != 'ansatt';
+END;
+
+CREATE TRIGGER check_instruktør_overlapp_insert
+BEFORE INSERT ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Instruktøren leder allerede en annen gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE instrukt_ID = NEW.instrukt_ID
+          AND dato        = NEW.dato
+          AND NEW.start   < slutt
+          AND NEW.slutt   > start
+    );
+END;
+
+CREATE TRIGGER check_instruktør_overlapp_update
+BEFORE UPDATE ON Gruppeaktivitet
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Instruktøren leder allerede en annen gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1 FROM Gruppeaktivitet
+        WHERE instrukt_ID = NEW.instrukt_ID
+          AND dato        = NEW.dato
+          AND ID         != NEW.ID
+          AND NEW.start   < slutt
+          AND NEW.slutt   > start
+    );
 END;
 
 --
