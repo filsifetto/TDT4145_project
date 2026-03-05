@@ -25,35 +25,34 @@ instruktør der tidsintervallet overlapper.
 \subsection{Det samme spørsmålet for en bruker. Kan dette løses i modellen eller må det
 gjøres i programvaren?}
 
-Resonnementet er det samme som for instruktører, men situasjonen er
-noe bredere fordi en bruker kan delta i flere typer aktiviteter.
-En profil kan være registrert i \textit{påmeldt\_til} for flere
-gruppeaktiviteter, og i \textit{møter\_til\_idrett} for flere
-idrettslagstimer.
-Det finnes ingen restriksjon i skjemaet som forhindrer overlappende
-tidsrom, verken innenfor samme aktivitetstype eller på tvers av de to.
-En bruker kan altså potensielt kollidere på tre måter:
-\begin{enumerate}
-    \item to gruppeaktiviteter som overlapper,
-    \item to idrettslagstimer som overlapper,
-    \item en gruppeaktivitet og en idrettslagstime som overlapper.
-\end{enumerate}
+Idrettslagstimer er forhåndsbooket for hele idrettslaget og krever ingen individuell
+påmelding – \textit{møter\_til\_idrett} er kun oppmøteregistrering.
+Overlappsregelen er dermed utelukkende relevant for individuelle påmeldinger til
+gruppeaktiviteter via \textit{påmeldt\_til}.
 
-I alle tilfellene krever overlappsjekken sammenligning av
-\textit{dato}, \textit{start} og \textit{slutt} på tvers av rader
-(og potensielt på tvers av tabellene \textit{Gruppeaktivitet} og
-\textit{Idrettslagstime}) for samme \textit{profil\_ID}.
-Siden tidsattributtene ikke ligger i relasjonstabellene
-\textit{påmeldt\_til} og \textit{møter\_til\_idrett}, men i
-\textit{Gruppeaktivitet} og \textit{Idrettslagstime}, kreves det
-en også en join for å utføre sjekken.
-Dette kan ikke uttrykkes med \texttt{UNIQUE} eller \texttt{CHECK}.
+To gruppeaktiviteter for samme profil kan kollidere dersom
+begge har samme \textit{dato} og overlappende \textit{start}/\textit{slutt}.
+Dette kan ikke uttrykkes med \texttt{UNIQUE} eller\texttt{CHECK},
+men \emph{kan} implementeres med triggere.
+
+\paragraph{Løsning via triggere.}
+Vi har implementert to triggere som håndhever regelen direkte i databasen:
+\begin{itemize}
+    \item \texttt{check\_bruker\_overlapp\_påmeldt\_insert} –
+          kjøres \texttt{BEFORE INSERT} på \textit{påmeldt\_til}.
+    \item \texttt{check\_bruker\_overlapp\_påmeldt\_update} –
+          kjøres \texttt{BEFORE UPDATE} på \textit{påmeldt\_til}.
+\end{itemize}
+Triggerene gjør en \texttt{JOIN} fra \textit{påmeldt\_til} til
+\textit{Gruppeaktivitet} for å hente \textit{dato}/\textit{start}/\textit{slutt},
+og avbryter med \texttt{RAISE(ABORT, \ldots)} dersom profilen allerede
+er påmeldt en annen gruppeaktivitet i overlappende tidsrom.
 
 \paragraph{Konklusjon.}
-Også denne regelen må håndteres i applikasjonskoden.
-Ved påmelding til en gruppeaktivitet eller oppmøte til en
-idrettslagstime bør applikasjonen kontrollere at brukeren ikke
-allerede deltar i en annen aktivitet som overlapper i tid.
+Regelen kan ikke uttrykkes med den relasjonelle modellen alene,
+men er fullt ut håndterbar i databasen med to triggere på \textit{påmeldt\_til}.
+Vi har valgt å implementere den direkte i SQL-scriptet,
+slik at applikasjonslaget ikke trenger å håndheve den manuelt.
 
 \subsection{Fra hvilket usecase testes det for / opprettes utestengelse (svartelisting)? Det
 trenger ikke være en av de oppgitte usecasene.}

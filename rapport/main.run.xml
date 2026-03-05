@@ -58,6 +58,7 @@
       <file>authoryear-comp.bbx</file>
       <file>authoryear-comp.cbx</file>
       <file>biblatex.cfg</file>
+      <file>norsk.lbx</file>
       <file>english.lbx</file>
     </requires>
   </internal>

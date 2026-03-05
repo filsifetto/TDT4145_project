@@ -19,6 +19,8 @@
 --   5. Medlemskap for idrettslagstime
 --   6. Avbestillingsfrist (senest 1 time før start)
 --   7. Instruktørrolle (kun ansatte kan settes som instruktør)
+--   8. En bruker kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid
+--      (check_bruker_overlapp_påmeldt_insert/update)
 --
 -- ============================================================================
 
@@ -401,6 +403,57 @@ FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Instruktør må ha type ansatt.')
     WHERE (SELECT type FROM Profil WHERE ID = NEW.instrukt_ID) != 'ansatt';
+END;
+
+--
+
+-- Overlapp: en bruker kan ikke delta i to aktiviteter som overlapper i tid
+CREATE TRIGGER check_bruker_overlapp_påmeldt_insert
+BEFORE INSERT ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er allerede påmeldt en annen gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM påmeldt_til pt
+        JOIN Gruppeaktivitet ny  ON  ny.senter_ID = NEW.senter_ID
+                                 AND ny.sal_ID    = NEW.sal_ID
+                                 AND ny.ID        = NEW.gruppeaktivitet_ID
+        JOIN Gruppeaktivitet eks ON eks.senter_ID = pt.senter_ID
+                                 AND eks.sal_ID   = pt.sal_ID
+                                 AND eks.ID       = pt.gruppeaktivitet_ID
+        WHERE pt.profil_ID = NEW.profil_ID
+          AND NOT (pt.senter_ID          = NEW.senter_ID
+               AND pt.sal_ID             = NEW.sal_ID
+               AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID)
+          AND eks.dato = ny.dato
+          AND ny.start < eks.slutt
+          AND ny.slutt > eks.start
+    );
+END;
+
+CREATE TRIGGER check_bruker_overlapp_påmeldt_update
+BEFORE UPDATE ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er allerede påmeldt en annen gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM påmeldt_til pt
+        JOIN Gruppeaktivitet ny  ON  ny.senter_ID = NEW.senter_ID
+                                 AND ny.sal_ID    = NEW.sal_ID
+                                 AND ny.ID        = NEW.gruppeaktivitet_ID
+        JOIN Gruppeaktivitet eks ON eks.senter_ID = pt.senter_ID
+                                 AND eks.sal_ID   = pt.sal_ID
+                                 AND eks.ID       = pt.gruppeaktivitet_ID
+        WHERE pt.profil_ID = NEW.profil_ID
+          AND NOT (pt.senter_ID          = NEW.senter_ID
+               AND pt.sal_ID             = NEW.sal_ID
+               AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID)
+          AND eks.dato = ny.dato
+          AND ny.start < eks.slutt
+          AND ny.slutt > eks.start
+    );
 END;
 
 CREATE TRIGGER check_utestengelse_insert
