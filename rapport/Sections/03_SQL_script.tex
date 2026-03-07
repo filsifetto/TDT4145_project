@@ -68,6 +68,18 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     \item \textbf{Instruktørrolle.}
     Kun profiler med \texttt{type = 'ansatt'} kan settes som instruktør for
     en gruppeaktivitet.
+
+    \item \textbf{Kapasitetsgrense for gruppeaktivitet.}
+    Påmelding til en gruppeaktivitet avslås når antall påmeldte er lik
+    salens kapasitet. Triggeren \texttt{check\_kapasitet\_påmeldt\_insert}
+    teller eksisterende rader i \texttt{påmeldt\_til} og sammenligner med
+    \texttt{Sal.kapasitet}.
+
+    \item \textbf{Kapasitetsgrense for idrettslagstime.}
+    Oppmøte til en idrettslagstime (dropin) avslås når antall oppmøtte er
+    lik salens kapasitet. Triggeren \texttt{check\_kapasitet\_idrett\_insert}
+    teller eksisterende rader i \texttt{møter\_til\_idrett} og sammenligner
+    med \texttt{Sal.kapasitet}.
 \end{enumerate}
 
 \subsection{Restriksjoner håndtert i applikasjonskode}

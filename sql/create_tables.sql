@@ -23,6 +23,10 @@
 --      (check_instruktør_overlapp_insert/update)
 --   9. En bruker kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid
 --      (check_bruker_overlapp_påmeldt_insert/update)
+--  10. Kapasitetsgrense: Påmelding til gruppeaktivitet avslås når antall
+--      påmeldte = salens kapasitet (check_kapasitet_påmeldt_insert)
+--  11. Kapasitetsgrense dropin: Oppmøte til idrettslagstime avslås når
+--      antall oppmøtte = salens kapasitet (check_kapasitet_idrett_insert)
 --
 -- ============================================================================
 
@@ -507,4 +511,38 @@ BEGIN
         WHERE profil_ID = NEW.profil_ID
           AND dato >= date('now', 'localtime', '-30 days')
     ) >= 3;
+END;
+
+CREATE TRIGGER check_kapasitet_påmeldt_insert
+BEFORE INSERT ON påmeldt_til
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Gruppeaktiviteten er full – kapasitetsgrensen er nådd.')
+    WHERE (
+        SELECT COUNT(*) FROM påmeldt_til
+        WHERE senter_ID          = NEW.senter_ID
+          AND sal_ID             = NEW.sal_ID
+          AND gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+    ) >= (
+        SELECT kapasitet FROM Sal
+        WHERE senter_ID = NEW.senter_ID
+          AND ID        = NEW.sal_ID
+    );
+END;
+
+CREATE TRIGGER check_kapasitet_idrett_insert
+BEFORE INSERT ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Idrettslagstimen er full – kapasitetsgrensen er nådd.')
+    WHERE (
+        SELECT COUNT(*) FROM møter_til_idrett
+        WHERE senter_ID          = NEW.senter_ID
+          AND sal_ID             = NEW.sal_ID
+          AND idrettslagstime_ID = NEW.idrettslagstime_ID
+    ) >= (
+        SELECT kapasitet FROM Sal
+        WHERE senter_ID = NEW.senter_ID
+          AND ID        = NEW.sal_ID
+    );
 END;
