@@ -316,7 +316,7 @@ BEGIN
         WHERE senter_ID = NEW.senter_ID
           AND sal_ID    = NEW.sal_ID
           AND dato      = NEW.dato
-          AND ID       != NEW.ID
+          AND NOT (senter_ID = NEW.senter_ID AND sal_ID = NEW.sal_ID AND ID = NEW.ID)
           AND NEW.start < slutt
           AND NEW.slutt > start
     );
@@ -350,7 +350,7 @@ BEGIN
         WHERE senter_ID = NEW.senter_ID
           AND sal_ID    = NEW.sal_ID
           AND dato      = NEW.dato
-          AND ID       != NEW.ID
+          AND NOT (senter_ID = NEW.senter_ID AND sal_ID = NEW.sal_ID AND ID = NEW.ID)
           AND NEW.start < slutt
           AND NEW.slutt > start
     );
@@ -439,7 +439,7 @@ BEGIN
         SELECT 1 FROM Gruppeaktivitet
         WHERE instrukt_ID = NEW.instrukt_ID
           AND dato        = NEW.dato
-          AND ID         != NEW.ID
+          AND NOT (senter_ID = NEW.senter_ID AND sal_ID = NEW.sal_ID AND ID = NEW.ID)
           AND NEW.start   < slutt
           AND NEW.slutt   > start
     );
