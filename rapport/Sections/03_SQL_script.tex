@@ -69,6 +69,19 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     Kun profiler med \texttt{type = 'ansatt'} kan settes som instruktør for
     en gruppeaktivitet.
 
+    \item \textbf{Instruktøroverlapp.}
+    En instruktør kan ikke lede to gruppeaktiviteter som overlapper i tid.
+    Triggerne \texttt{check\_instruktør\_overlapp\_insert} og
+    \texttt{check\_instruktør\_overlapp\_update} sjekker om det finnes en
+    annen gruppeaktivitet med samme instruktør og overlappende tidsrom.
+
+    \item \textbf{Brukeroverlapp ved påmelding.}
+    En profil kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid.
+    Triggerne \texttt{check\_bruker\_overlapp\_påmeldt\_insert} og
+    \texttt{check\_bruker\_overlapp\_påmeldt\_update} gjør en \texttt{JOIN}
+    mot \texttt{Gruppeaktivitet} for å sammenligne tidsrom og avviser
+    påmeldingen dersom det finnes en kollisjon.
+
     \item \textbf{Kapasitetsgrense for gruppeaktivitet.}
     Påmelding til en gruppeaktivitet avslås når antall påmeldte er lik
     salens kapasitet. Triggeren \texttt{check\_kapasitet\_påmeldt\_insert}
