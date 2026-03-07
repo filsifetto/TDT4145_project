@@ -240,7 +240,7 @@ BEFORE INSERT ON møter_til_idrett
 FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Kan ikke registrere oppmøte etter idrettslagstime er ferdig.')
-    WHERE datetime('now') > (
+    WHERE datetime('now', 'localtime') > (
         SELECT dato || ' ' || slutt
         FROM Idrettslagstime
         WHERE senter_ID = NEW.senter_ID
@@ -382,7 +382,7 @@ BEFORE DELETE ON påmeldt_til
 FOR EACH ROW
 BEGIN
     SELECT RAISE(ABORT, 'Avbestilling må skje senest 1 time før aktivitetens start.')
-    WHERE datetime('now') > (
+    WHERE datetime('now', 'localtime') > (
         SELECT datetime(dato || ' ' || start, '-1 hour')
         FROM Gruppeaktivitet
         WHERE senter_ID = OLD.senter_ID
@@ -493,7 +493,7 @@ BEGIN
     WHERE (
         SELECT COUNT(*) FROM Prikk
         WHERE profil_ID = NEW.profil_ID
-          AND dato >= date('now', '-30 days')
+          AND dato >= date('now', 'localtime', '-30 days')
     ) >= 3;
 END;
 
@@ -505,6 +505,6 @@ BEGIN
     WHERE (
         SELECT COUNT(*) FROM Prikk
         WHERE profil_ID = NEW.profil_ID
-          AND dato >= date('now', '-30 days')
+          AND dato >= date('now', 'localtime', '-30 days')
     ) >= 3;
 END;
