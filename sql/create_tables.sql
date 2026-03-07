@@ -10,6 +10,11 @@
 --      gruppeaktivitet uten å registrere oppmøte senest 5 minutter før start
 --      skal få en prikk. Regelen krever tidsberegning utenfor databasen.
 --
+--   2. 48-timersregelen: En gruppetime skal legges ut 48 timer før den
+--      holdes. Regelen er en myk forretningsregel som best håndheves i
+--      applikasjonskoden, da en hard constraint ville hindret instruktører
+--      som er noe forsinket fra å legge ut timer.
+--
 -- Restriksjoner håndhevet med triggere (se nederst i filen):
 --
 --   2. Utestengelse (svartelisting): >= 3 prikker siste 30 dager blokkerer
