@@ -121,6 +121,19 @@ SQL-spørringer mot databasen. Dette vil også gjøre det enklere å oppdatere s
           innenfor de siste 30 dagene.
 \end{itemize}
 
+\paragraph{Når kan eksplisitt lagring likevel lønne seg?}
+I større systemer kan det være fordelaktig å lagre statistikk eksplisitt.
+Med store datamengder kan aggregerings-spørringer bli trege;
+forhåndsberegnet statistikk, for eksempel i form av materialiserte views
+eller oppsummeringstabeller, gir da raskere tilgang.
+Dersom gamle data slettes eller endres over tid, kan historisk statistikk
+gå tapt med mindre den er lagret eksplisitt.
+I tillegg kan periodiske rapporter beregnes på forhånd og lagres,
+slik at de er raskt tilgjengelige uten å kjøre tunge spørringer på nytt.
+
 \paragraph{Konklusjon.}
-Statistikk trenger \emph{ikke} lagres eksplisitt i vår modell;
-alt kan utledes av de normaliserte tabellene med vanlige SQL-spørringer.
+Statistikk trenger \emph{ikke} lagres eksplisitt i vår modell.
+For SiTs skala er datamengdene moderate, og alt kan utledes
+av de normaliserte tabellene med vanlige SQL-spørringer.
+I et større system ville det likevel vært aktuelt å vurdere
+eksplisitt lagring av statistikk for ytelse og bevaring av historiske data.
