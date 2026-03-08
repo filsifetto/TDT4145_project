@@ -8,7 +8,7 @@ Bemanning(senter_ID pk fk(Senter), dag pk, start, slutt)
 
 Sal(senter_ID pk fk(Senter), ID pk, type, kapasitet)
 
-Tredemølle(senter_ID pk fk(Senter),sal_ID pk fk(Sal), nummer pk, produsent, maks_hastighet, maks_stigning)
+Tredemølle(senter_ID pk fk(Senter),sal_ID pk fk(Sal), nummer pk, produsent, maksimal_hastighet, maksimal_stigning)
 
 Sykkel(senter_ID pk fk(Senter), sal_ID pk fk(Sal), nummer pk, bluetooth)
 

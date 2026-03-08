@@ -116,8 +116,8 @@ CREATE TABLE Tredemølle (
     sal_ID         INTEGER NOT NULL,
     nummer         INTEGER NOT NULL,
     produsent      TEXT    NOT NULL,
-    maks_hastighet REAL    NOT NULL CHECK (maks_hastighet > 0),
-    maks_stigning  REAL    NOT NULL CHECK (maks_stigning  > 0),
+    maksimal_hastighet REAL    NOT NULL CHECK (maksimal_hastighet > 0),
+    maksimal_stigning  REAL    NOT NULL CHECK (maksimal_stigning  > 0),
     PRIMARY KEY (senter_ID, sal_ID, nummer),
     FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID) ON DELETE CASCADE
 );
