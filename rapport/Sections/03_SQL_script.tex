@@ -34,6 +34,30 @@ Scriptet er skrevet for SQLite.
   label={lst:sql-script}
 ]{../sql/create_tables.sql}
 
+\subsection{Kaskadering ved sletting}
+
+De fleste fremmednøkler er definert med \texttt{ON DELETE CASCADE}.
+Svake entiteter (f.eks.\ \textit{Sal}, \textit{Bemanning}, \textit{Prikk},
+\textit{Tredemølle}) eksisterer kun i kraft av sin eiertabell, og bør
+fjernes dersom eieren slettes.
+Det samme gjelder koblings- og oppmøtetabeller
+(\textit{har\_fasilitet}, \textit{er\_medlem}, \textit{påmeldt\_til},
+\textit{møter\_til\_gruppe} osv.): en rad i en slik tabell er meningsløs
+uten begge sider av relasjonen.
+
+To fremmednøkler beholder standard oppførsel (\texttt{NO ACTION}, dvs.\ sletting
+avvises):
+\begin{itemize}[noitemsep]
+    \item \textit{Gruppeaktivitet.aktivitet\_navn} $\rightarrow$ \textit{Aktivitet}:
+          en aktivitetstype er en gjenbrukbar definisjon og ikke en eier.
+          Sletting av f.eks.\ «Yoga» skal ikke stille fjerne alle planlagte
+          yogatimer.
+    \item \textit{Gruppeaktivitet.instrukt\_ID} $\rightarrow$ \textit{Profil}:
+          sletting av en instruktørprofil skal avvises så lenge det finnes
+          gruppeaktiviteter knyttet til profilen, slik at aktivitetene må
+          avlyses eller tildeles en annen instruktør først.
+\end{itemize}
+
 \subsection{Restriksjoner håndtert med triggere}
 
 Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med

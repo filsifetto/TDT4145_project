@@ -86,8 +86,8 @@ CREATE TABLE har_fasilitet (
     senter_ID    INTEGER NOT NULL,
     fasilitet_ID INTEGER NOT NULL,
     PRIMARY KEY (senter_ID, fasilitet_ID),
-    FOREIGN KEY (senter_ID)    REFERENCES Senter(ID),
-    FOREIGN KEY (fasilitet_ID) REFERENCES Fasilitet(ID)
+    FOREIGN KEY (senter_ID)    REFERENCES Senter(ID)    ON DELETE CASCADE,
+    FOREIGN KEY (fasilitet_ID) REFERENCES Fasilitet(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Bemanning (
@@ -98,7 +98,7 @@ CREATE TABLE Bemanning (
     start     TIME    NOT NULL,
     slutt     TIME    NOT NULL,
     PRIMARY KEY (senter_ID, dag),
-    FOREIGN KEY (senter_ID) REFERENCES Senter(ID),
+    FOREIGN KEY (senter_ID) REFERENCES Senter(ID) ON DELETE CASCADE,
     CHECK (start < slutt)
 );
 
@@ -108,7 +108,7 @@ CREATE TABLE Sal (
     type      TEXT    NOT NULL,
     kapasitet INTEGER NOT NULL CHECK (kapasitet > 0),
     PRIMARY KEY (senter_ID, ID),
-    FOREIGN KEY (senter_ID) REFERENCES Senter(ID)
+    FOREIGN KEY (senter_ID) REFERENCES Senter(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Tredemølle (
@@ -119,7 +119,7 @@ CREATE TABLE Tredemølle (
     maks_hastighet REAL    NOT NULL CHECK (maks_hastighet > 0),
     maks_stigning  REAL    NOT NULL CHECK (maks_stigning  > 0),
     PRIMARY KEY (senter_ID, sal_ID, nummer),
-    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID)
+    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Sykkel (
@@ -128,7 +128,7 @@ CREATE TABLE Sykkel (
     nummer    INTEGER NOT NULL,
     bluetooth INTEGER NOT NULL DEFAULT 0 CHECK (bluetooth IN (0, 1)),
     PRIMARY KEY (senter_ID, sal_ID, nummer),
-    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID)
+    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Gruppe (
@@ -137,7 +137,7 @@ CREATE TABLE Gruppe (
     type           TEXT    NOT NULL,
     beskrivelse    TEXT,
     PRIMARY KEY (idrettslags_ID, ID),
-    FOREIGN KEY (idrettslags_ID) REFERENCES Idrettslag(ID)
+    FOREIGN KEY (idrettslags_ID) REFERENCES Idrettslag(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Prikk (
@@ -145,15 +145,15 @@ CREATE TABLE Prikk (
     ID        INTEGER NOT NULL,
     dato      DATE    NOT NULL,
     PRIMARY KEY (profil_ID, ID),
-    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
+    FOREIGN KEY (profil_ID) REFERENCES Profil(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE er_medlem (
     idrettslags_ID INTEGER NOT NULL,
     profil_ID      INTEGER NOT NULL,
     PRIMARY KEY (idrettslags_ID, profil_ID),
-    FOREIGN KEY (idrettslags_ID) REFERENCES Idrettslag(ID),
-    FOREIGN KEY (profil_ID)      REFERENCES Profil(ID)
+    FOREIGN KEY (idrettslags_ID) REFERENCES Idrettslag(ID) ON DELETE CASCADE,
+    FOREIGN KEY (profil_ID)      REFERENCES Profil(ID)     ON DELETE CASCADE
 );
 
 CREATE TABLE Idrettslagstime (
@@ -168,9 +168,9 @@ CREATE TABLE Idrettslagstime (
     idrettslags_ID INTEGER NOT NULL,
     gruppe_ID      INTEGER NOT NULL,
     PRIMARY KEY (senter_ID, sal_ID, ID),
-    FOREIGN KEY (senter_ID, sal_ID)            REFERENCES Sal(senter_ID, ID),
-    FOREIGN KEY (idrettslags_ID)               REFERENCES Idrettslag(ID),
-    FOREIGN KEY (idrettslags_ID, gruppe_ID)    REFERENCES Gruppe(idrettslags_ID, ID),
+    FOREIGN KEY (senter_ID, sal_ID)            REFERENCES Sal(senter_ID, ID)            ON DELETE CASCADE,
+    FOREIGN KEY (idrettslags_ID)               REFERENCES Idrettslag(ID)               ON DELETE CASCADE,
+    FOREIGN KEY (idrettslags_ID, gruppe_ID)    REFERENCES Gruppe(idrettslags_ID, ID)    ON DELETE CASCADE,
     CHECK (start < slutt)
 );
 
@@ -181,8 +181,8 @@ CREATE TABLE møter_til_idrett (
     profil_ID          INTEGER NOT NULL,
     PRIMARY KEY (senter_ID, sal_ID, idrettslagstime_ID, profil_ID),
     FOREIGN KEY (senter_ID, sal_ID, idrettslagstime_ID)
-        REFERENCES Idrettslagstime(senter_ID, sal_ID, ID),
-    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
+        REFERENCES Idrettslagstime(senter_ID, sal_ID, ID) ON DELETE CASCADE,
+    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)         ON DELETE CASCADE
 );
 
 CREATE TABLE Gruppeaktivitet (
@@ -195,7 +195,7 @@ CREATE TABLE Gruppeaktivitet (
     aktivitet_navn TEXT    NOT NULL,
     instrukt_ID    INTEGER NOT NULL,
     PRIMARY KEY (senter_ID, sal_ID, ID),
-    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID),
+    FOREIGN KEY (senter_ID, sal_ID) REFERENCES Sal(senter_ID, ID) ON DELETE CASCADE,
     FOREIGN KEY (aktivitet_navn)    REFERENCES Aktivitet(navn),
     FOREIGN KEY (instrukt_ID)       REFERENCES Profil(ID),
     CHECK (start < slutt)
@@ -209,8 +209,8 @@ CREATE TABLE møter_til_gruppe (
     tidspunkt          DATETIME NOT NULL,
     PRIMARY KEY (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID),
     FOREIGN KEY (senter_ID, sal_ID, gruppeaktivitet_ID)
-        REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID),
-    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
+        REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID) ON DELETE CASCADE,
+    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)         ON DELETE CASCADE
 );
 
 CREATE TABLE påmeldt_til (
@@ -222,8 +222,8 @@ CREATE TABLE påmeldt_til (
     PRIMARY KEY (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID),
     UNIQUE (senter_ID, sal_ID, gruppeaktivitet_ID, påmelding_nummer),
     FOREIGN KEY (senter_ID, sal_ID, gruppeaktivitet_ID)
-        REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID),
-    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)
+        REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID) ON DELETE CASCADE,
+    FOREIGN KEY (profil_ID) REFERENCES Profil(ID)         ON DELETE CASCADE
 );
 
 -- ============================================================================
