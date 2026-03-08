@@ -30,34 +30,36 @@ fullt ut håndterbar i databasen med to triggere på \textit{Gruppeaktivitet}.
 \subsection{Det samme spørsmålet for en bruker. Kan dette løses i modellen eller må det
 gjøres i programvaren?}
 
-Idrettslagstimer er forhåndsbooket for hele idrettslaget og krever ingen individuell
-påmelding – \textit{møter\_til\_idrett} er kun oppmøteregistrering.
-Overlappsregelen er dermed utelukkende relevant for individuelle påmeldinger til
-gruppeaktiviteter via \textit{påmeldt\_til}.
-
-To gruppeaktiviteter for samme profil kan kollidere dersom
-begge har samme \textit{dato} og overlappende \textit{start}/\textit{slutt}.
-Dette kan ikke uttrykkes med \texttt{UNIQUE} eller\texttt{CHECK},
+En profil kan potensielt havne på to steder samtidig i tre tilfeller:
+(a)~to gruppeaktiviteter, (b)~en gruppeaktivitet og en idrettslagstime,
+eller (c)~to idrettslagstimer. Alle tre involverer overlappende
+\textit{dato}/\textit{start}/\textit{slutt}-intervaller og kan ikke
+uttrykkes med \texttt{UNIQUE} eller \texttt{CHECK},
 men \emph{kan} implementeres med triggere.
 
 \paragraph{Løsning via triggere.}
-Vi har implementert to triggere som håndhever regelen direkte i databasen:
+Vi dekker alle tre tilfellene med fire triggere:
 \begin{itemize}
-    \item \texttt{check\_bruker\_overlapp\_påmeldt\_insert} –
-          kjøres \texttt{BEFORE INSERT} på \textit{påmeldt\_til}.
-    \item \texttt{check\_bruker\_overlapp\_påmeldt\_update} –
-          kjøres \texttt{BEFORE UPDATE} på \textit{påmeldt\_til}.
+    \item \texttt{check\_bruker\_overlapp\_påmeldt\_insert/update} –
+          kjøres \texttt{BEFORE INSERT}/\texttt{UPDATE} på \textit{påmeldt\_til}.
+          Sjekker at den nye gruppeaktiviteten ikke overlapper med
+          (a)~en annen gruppeaktivitet profilen er påmeldt,
+          eller (b)~en idrettslagstime profilen er registrert på
+          (via \texttt{JOIN} mot \textit{møter\_til\_idrett} og \textit{Idrettslagstime}).
+    \item \texttt{check\_bruker\_overlapp\_idrett\_insert/update} –
+          kjøres \texttt{BEFORE INSERT}/\texttt{UPDATE} på \textit{møter\_til\_idrett}.
+          Sjekker at den nye idrettslagstimen ikke overlapper med
+          (b)~en gruppeaktivitet profilen er påmeldt
+          (via \texttt{JOIN} mot \textit{påmeldt\_til} og \textit{Gruppeaktivitet}),
+          eller (c)~en annen idrettslagstime profilen allerede er registrert på.
 \end{itemize}
-Triggerene gjør en \texttt{JOIN} fra \textit{påmeldt\_til} til
-\textit{Gruppeaktivitet} for å hente \textit{dato}/\textit{start}/\textit{slutt},
-og avbryter med \texttt{RAISE(ABORT, \ldots)} dersom profilen allerede
-er påmeldt en annen gruppeaktivitet i overlappende tidsrom.
 
 \paragraph{Konklusjon.}
 Regelen kan ikke uttrykkes med den relasjonelle modellen alene,
-men er fullt ut håndterbar i databasen med to triggere på \textit{påmeldt\_til}.
-Vi har valgt å implementere den direkte i SQL-scriptet,
-slik at applikasjonslaget ikke trenger å håndheve den manuelt.
+men er fullt ut håndterbar i databasen med triggere på både
+\textit{påmeldt\_til} og \textit{møter\_til\_idrett}.
+Alle tre overlappskombinasjonene er dekket direkte i SQL-scriptet,
+slik at applikasjonslaget ikke trenger å håndheve dem manuelt.
 
 \subsection{Fra hvilket usecase testes det for / opprettes utestengelse (svartelisting)? Det
 trenger ikke være en av de oppgitte usecasene.}
