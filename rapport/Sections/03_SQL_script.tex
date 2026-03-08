@@ -102,11 +102,22 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     annen gruppeaktivitet med samme instruktør og overlappende tidsrom.
 
     \item \textbf{Brukeroverlapp ved påmelding.}
-    En profil kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid.
+    En profil kan ikke melde seg på en gruppeaktivitet som overlapper i tid
+    med en annen gruppeaktivitet profilen allerede er påmeldt,
+    eller med en idrettslagstime profilen allerede er registrert på.
     Triggerne \texttt{check\_bruker\_overlapp\_påmeldt\_insert} og
-    \texttt{check\_bruker\_overlapp\_påmeldt\_update} gjør en \texttt{JOIN}
-    mot \texttt{Gruppeaktivitet} for å sammenligne tidsrom og avviser
-    påmeldingen dersom det finnes en kollisjon.
+    \texttt{check\_bruker\_overlapp\_påmeldt\_update} sjekker begge tilfeller
+    via \texttt{JOIN} mot henholdsvis \texttt{Gruppeaktivitet}/\texttt{påmeldt\_til}
+    og \texttt{Idrettslagstime}/\texttt{møter\_til\_idrett}.
+
+    \item \textbf{Brukeroverlapp ved dropin til idrettslagstime.}
+    En profil kan ikke droppe inn på en idrettslagstime som overlapper i tid
+    med en gruppeaktivitet profilen er påmeldt,
+    eller med en annen idrettslagstime profilen allerede er registrert på.
+    Triggerne \texttt{check\_bruker\_overlapp\_idrett\_insert} og
+    \texttt{check\_bruker\_overlapp\_idrett\_update} håndhever dette
+    via \texttt{JOIN} mot \texttt{Gruppeaktivitet}/\texttt{påmeldt\_til}
+    og \texttt{Idrettslagstime}/\texttt{møter\_til\_idrett}.
 
     \item \textbf{Kapasitetsgrense for gruppeaktivitet.}
     Påmelding til en gruppeaktivitet avslås når antall påmeldte er lik
