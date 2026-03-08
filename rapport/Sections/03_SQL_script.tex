@@ -119,11 +119,15 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     via \texttt{JOIN} mot \texttt{Gruppeaktivitet}/\texttt{påmeldt\_til}
     og \texttt{Idrettslagstime}/\texttt{møter\_til\_idrett}.
 
-    \item \textbf{Kapasitetsgrense for gruppeaktivitet.}
-    Påmelding til en gruppeaktivitet avslås når antall påmeldte er lik
-    salens kapasitet. Triggeren \texttt{check\_kapasitet\_påmeldt\_insert}
-    teller eksisterende rader i \texttt{påmeldt\_til} og sammenligner med
-    \texttt{Sal.kapasitet}.
+    \item \textbf{Venteliste og kapasitetsgrense for gruppeaktivitet.}
+    Påmelding til en gruppeaktivitet er alltid tillatt – det finnes ingen
+    øvre grense for antall påmeldte (venteliste via
+    \texttt{påmelding\_nummer}). Kapasitetssjekken skjer i stedet ved
+    oppmøte: triggeren \texttt{check\_kapasitet\_møter\_gruppe\_insert}
+    avviser innregistrering i \texttt{møter\_til\_gruppe} dersom profilens
+    \texttt{påmelding\_nummer} er høyere enn \texttt{Sal.kapasitet}, dvs.
+    profilen er ikke blant de $n$ første på ventelisten og får dermed ikke
+    plass.
 
     \item \textbf{Kapasitetsgrense for idrettslagstime.}
     Oppmøte til en idrettslagstime (dropin) avslås når antall oppmøtte er
