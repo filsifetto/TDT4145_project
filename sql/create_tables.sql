@@ -40,9 +40,9 @@
 --      (check_bruker_overlapp_idrett_insert/update)
 --  10. Venteliste/kapasitetsgrense for gruppeaktivitet: Påmelding er alltid
 --      tillatt (ubegrenset venteliste via påmelding_nummer). Ved oppmøte
---      (insert i møter_til_gruppe) avslås innregistrering dersom profilens
---      påmelding_nummer er høyere enn salens kapasitet – dvs. profilen er
---      ikke blant de n første påmeldte
+--      (insert i møter_til_gruppe) beregnes profilens rang som antall
+--      påmeldte med påmelding_nummer <= profilens eget nummer (håndterer
+--      hull etter avmeldinger). Oppmøte avslås dersom rang > Sal.kapasitet
 --      (check_kapasitet_møter_gruppe_insert)
 --  11. Kapasitetsgrense dropin: Oppmøte til idrettslagstime avslås når
 --      antall oppmøtte = salens kapasitet (check_kapasitet_idrett_insert)
@@ -644,17 +644,25 @@ CREATE TRIGGER check_kapasitet_møter_gruppe_insert
 BEFORE INSERT ON møter_til_gruppe
 FOR EACH ROW
 BEGIN
-    -- Tillat oppmøte kun dersom profilens påmelding_nummer er blant de n
-    -- laveste, der n = Sal.kapasitet.  Påmelding (insert i påmeldt_til) er
-    -- alltid tillatt – det er ventelisten som sorterer hvem som faktisk
-    -- får plass.
-    SELECT RAISE(ABORT, 'Profilen er ikke blant de n første påmeldte – kapasitetsgrensen er nådd.')
+    -- Tillat oppmøte kun dersom profilens rang i ventelisten er <= n,
+    -- der n = Sal.kapasitet.  Rangen beregnes som antall påmeldte med
+    -- påmelding_nummer <= denne profilens nummer; dette håndterer hull i
+    -- nummereringen som oppstår når folk melder seg av.
+    -- Påmelding (insert i påmeldt_til) er alltid tillatt – ventelisten
+    -- sorterer hvem som faktisk får plass.
+    SELECT RAISE(ABORT, 'Profilen er ikke blant de n første i ventelisten – kapasitetsgrensen er nådd.')
     WHERE (
-        SELECT påmelding_nummer FROM påmeldt_til
+        SELECT COUNT(*) FROM påmeldt_til
         WHERE senter_ID          = NEW.senter_ID
           AND sal_ID             = NEW.sal_ID
           AND gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
-          AND profil_ID          = NEW.profil_ID
+          AND påmelding_nummer  <= (
+              SELECT påmelding_nummer FROM påmeldt_til
+              WHERE senter_ID          = NEW.senter_ID
+                AND sal_ID             = NEW.sal_ID
+                AND gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+                AND profil_ID          = NEW.profil_ID
+          )
     ) > (
         SELECT kapasitet FROM Sal
         WHERE senter_ID = NEW.senter_ID

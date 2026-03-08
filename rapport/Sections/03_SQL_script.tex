@@ -125,9 +125,13 @@ Følgende restriksjoner krever subspørringer og kan ikke uttrykkes med
     \texttt{påmelding\_nummer}). Kapasitetssjekken skjer i stedet ved
     oppmøte: triggeren \texttt{check\_kapasitet\_møter\_gruppe\_insert}
     avviser innregistrering i \texttt{møter\_til\_gruppe} dersom profilens
-    \texttt{påmelding\_nummer} er høyere enn \texttt{Sal.kapasitet}, dvs.
-    profilen er ikke blant de $n$ første på ventelisten og får dermed ikke
-    plass.
+    \emph{rang} i køen overstiger salens kapasitet $n$.
+    Rangen beregnes som antall rader i \texttt{påmeldt\_til} med
+    \texttt{påmelding\_nummer} $\leq$ profilens eget nummer.
+    Denne fremgangsmåten håndterer hull i nummereringen som oppstår når
+    profiler melder seg av (f.eks.\ gjenværende numre 1, 3, 5 etter
+    avmelding av nr.\ 2 og 4 gir ranger 1, 2, 3).
+    Profiler med rang $>n$ sperres fra oppmøte.
 
     \item \textbf{Kapasitetsgrense for idrettslagstime.}
     Oppmøte til en idrettslagstime (dropin) avslås når antall oppmøtte er
