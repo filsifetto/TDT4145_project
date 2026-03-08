@@ -21,17 +21,23 @@
 --
 -- Restriksjoner håndhevet med triggere (se nederst i filen):
 --
---   2. Utestengelse (svartelisting): >= 3 prikker siste 30 dager blokkerer
---      ny påmelding (check_utestengelse_insert).
---   3. Oppmøte etter aktivitetens slutt
---   4. Én booking per sal per tidspunkt (4 triggere: insert/update x 2 tabeller)
---   5. Medlemskap for idrettslagstime
---   6. Avbestillingsfrist (senest 1 time før start)
---   7. Instruktørrolle (kun ansatte kan settes som instruktør)
---   8. En instruktør kan ikke lede to gruppeaktiviteter som overlapper i tid
+--   1. Utestengelse (svartelisting): >= 3 prikker siste 30 dager blokkerer
+--      ny påmelding (check_utestengelse_insert/update)
+--   2. Oppmøte etter aktivitetens slutt
+--   3. Én booking per sal per tidspunkt (4 triggere: insert/update x 2 tabeller)
+--   4. Medlemskap for idrettslagstime
+--   5. Avbestillingsfrist (senest 1 time før start)
+--   6. Instruktørrolle (kun ansatte kan settes som instruktør)
+--   7. En instruktør kan ikke lede to gruppeaktiviteter som overlapper i tid
 --      (check_instruktør_overlapp_insert/update)
---   9. En bruker kan ikke være påmeldt to gruppeaktiviteter som overlapper i tid
+--   8. Brukeroverlapp ved påmelding: En bruker kan ikke være påmeldt en
+--      gruppeaktivitet som overlapper med en annen gruppeaktivitet eller en
+--      idrettslagstime brukeren allerede er registrert på
 --      (check_bruker_overlapp_påmeldt_insert/update)
+--   9. Brukeroverlapp ved dropin: En bruker kan ikke droppe inn på en
+--      idrettslagstime som overlapper med en påmeldt gruppeaktivitet eller
+--      en annen idrettslagstime brukeren er registrert på
+--      (check_bruker_overlapp_idrett_insert/update)
 --  10. Kapasitetsgrense: Påmelding til gruppeaktivitet avslås når antall
 --      påmeldte = salens kapasitet (check_kapasitet_påmeldt_insert)
 --  11. Kapasitetsgrense dropin: Oppmøte til idrettslagstime avslås når
@@ -472,6 +478,21 @@ BEGIN
           AND ny.start < eks.slutt
           AND ny.slutt > eks.start
     );
+    SELECT RAISE(ABORT, 'Profilen er registrert på en idrettslagstime som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM møter_til_idrett mti
+        JOIN Idrettslagstime it ON it.senter_ID = mti.senter_ID
+                                AND it.sal_ID    = mti.sal_ID
+                                AND it.ID        = mti.idrettslagstime_ID
+        JOIN Gruppeaktivitet ga ON ga.senter_ID = NEW.senter_ID
+                                AND ga.sal_ID    = NEW.sal_ID
+                                AND ga.ID        = NEW.gruppeaktivitet_ID
+        WHERE mti.profil_ID = NEW.profil_ID
+          AND it.dato = ga.dato
+          AND ga.start < it.slutt
+          AND ga.slutt > it.start
+    );
 END;
 
 CREATE TRIGGER check_bruker_overlapp_påmeldt_update
@@ -492,6 +513,99 @@ BEGIN
           AND NOT (pt.senter_ID          = NEW.senter_ID
                AND pt.sal_ID             = NEW.sal_ID
                AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID)
+          AND eks.dato = ny.dato
+          AND ny.start < eks.slutt
+          AND ny.slutt > eks.start
+    );
+    SELECT RAISE(ABORT, 'Profilen er registrert på en idrettslagstime som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM møter_til_idrett mti
+        JOIN Idrettslagstime it ON it.senter_ID = mti.senter_ID
+                                AND it.sal_ID    = mti.sal_ID
+                                AND it.ID        = mti.idrettslagstime_ID
+        JOIN Gruppeaktivitet ga ON ga.senter_ID = NEW.senter_ID
+                                AND ga.sal_ID    = NEW.sal_ID
+                                AND ga.ID        = NEW.gruppeaktivitet_ID
+        WHERE mti.profil_ID = NEW.profil_ID
+          AND it.dato = ga.dato
+          AND ga.start < it.slutt
+          AND ga.slutt > it.start
+    );
+END;
+
+CREATE TRIGGER check_bruker_overlapp_idrett_insert
+BEFORE INSERT ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er påmeldt en gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM påmeldt_til pt
+        JOIN Gruppeaktivitet ga ON ga.senter_ID = pt.senter_ID
+                               AND ga.sal_ID    = pt.sal_ID
+                               AND ga.ID        = pt.gruppeaktivitet_ID
+        JOIN Idrettslagstime it ON it.senter_ID = NEW.senter_ID
+                                AND it.sal_ID    = NEW.sal_ID
+                                AND it.ID        = NEW.idrettslagstime_ID
+        WHERE pt.profil_ID = NEW.profil_ID
+          AND ga.dato = it.dato
+          AND it.start < ga.slutt
+          AND it.slutt > ga.start
+    );
+    SELECT RAISE(ABORT, 'Profilen er allerede registrert på en annen idrettslagstime som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM møter_til_idrett mti
+        JOIN Idrettslagstime ny  ON ny.senter_ID = NEW.senter_ID
+                                 AND ny.sal_ID    = NEW.sal_ID
+                                 AND ny.ID        = NEW.idrettslagstime_ID
+        JOIN Idrettslagstime eks ON eks.senter_ID = mti.senter_ID
+                                 AND eks.sal_ID    = mti.sal_ID
+                                 AND eks.ID        = mti.idrettslagstime_ID
+        WHERE mti.profil_ID = NEW.profil_ID
+          AND NOT (mti.senter_ID          = NEW.senter_ID
+               AND mti.sal_ID             = NEW.sal_ID
+               AND mti.idrettslagstime_ID = NEW.idrettslagstime_ID)
+          AND eks.dato = ny.dato
+          AND ny.start < eks.slutt
+          AND ny.slutt > eks.start
+    );
+END;
+
+CREATE TRIGGER check_bruker_overlapp_idrett_update
+BEFORE UPDATE ON møter_til_idrett
+FOR EACH ROW
+BEGIN
+    SELECT RAISE(ABORT, 'Profilen er påmeldt en gruppeaktivitet som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM påmeldt_til pt
+        JOIN Gruppeaktivitet ga ON ga.senter_ID = pt.senter_ID
+                               AND ga.sal_ID    = pt.sal_ID
+                               AND ga.ID        = pt.gruppeaktivitet_ID
+        JOIN Idrettslagstime it ON it.senter_ID = NEW.senter_ID
+                                AND it.sal_ID    = NEW.sal_ID
+                                AND it.ID        = NEW.idrettslagstime_ID
+        WHERE pt.profil_ID = NEW.profil_ID
+          AND ga.dato = it.dato
+          AND it.start < ga.slutt
+          AND it.slutt > ga.start
+    );
+    SELECT RAISE(ABORT, 'Profilen er allerede registrert på en annen idrettslagstime som overlapper i tid.')
+    WHERE EXISTS (
+        SELECT 1
+        FROM møter_til_idrett mti
+        JOIN Idrettslagstime ny  ON ny.senter_ID = NEW.senter_ID
+                                 AND ny.sal_ID    = NEW.sal_ID
+                                 AND ny.ID        = NEW.idrettslagstime_ID
+        JOIN Idrettslagstime eks ON eks.senter_ID = mti.senter_ID
+                                 AND eks.sal_ID    = mti.sal_ID
+                                 AND eks.ID        = mti.idrettslagstime_ID
+        WHERE mti.profil_ID = NEW.profil_ID
+          AND NOT (mti.senter_ID          = NEW.senter_ID
+               AND mti.sal_ID             = NEW.sal_ID
+               AND mti.idrettslagstime_ID = NEW.idrettslagstime_ID)
           AND eks.dato = ny.dato
           AND ny.start < eks.slutt
           AND ny.slutt > eks.start
