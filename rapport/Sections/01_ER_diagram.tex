@@ -22,10 +22,11 @@ Følgende antakelser er gjort:
       Et tredje alternativ ville vært å ha bemanning som en attributt for senteret.
       Ulempen med dette er at vi fort kunne fått null-verdier.
     \item \textbf{Åpningstider.} Vi antar at et treningssenter har samme åpningstider hver dag.
-    \item \textbf{Plasser på aktivitet.} Antall plasser på en aktivitet er definert ut fra kapasiteten til salen aktiviteten foregår i.
-    \item \textbf{Påmelding og kø.} Køsystemet i påmelding tilrettelegges for med et påmeldingsnummer, som fungerer som kølapp.
-     For en aktivitet i en sal med kapasitet $n$ regnes de $n$ profilene med lavest påmeldingsnummer som påmeldt, resten står på venteliste.
-     For idrettslagstime vil vi bruke et dropin-system, der de $n$ første som møter vil få plass.
+    \item \textbf{Plasser på aktivitet.} Vi antar at antall plasser på en aktivitet er entydig definert ut fra kapasiteten til salen aktiviteten foregår i.
+    \item \textbf{Påmelding og kapasitetsgrense.} Påmelding til en gruppeaktivitet avslås når antall påmeldte har nådd salens kapasitet.
+     Påmeldingsnummeret fungerer som kølapp og brukes til å ordne påmeldte kronologisk.
+     For idrettslagstime brukes et dropin-system der oppmøte avslås når antall oppmøtte har nådd salens kapasitet.
+     Begge kapasitetsgrensene håndheves av triggere i databasen.
     \item \textbf{Sykler og tredemøller.} Utstyr flyttes ikke mellom rom og identifiseres entydig med nummer og sal.
     \item \textbf{Instruktør.} Vi har generalisert Profil-entiteten, slik at dette fanger både ansatte/instruktører
      og vanlige medlemmer. Vi skiller mellom rollene med attributten \textit{type}. Dette kan forsvares med at instruktører
@@ -49,6 +50,8 @@ Følgende regler og restriksjoner kan brukes i et system som bygger på modellen
     \item \textbf{Møting etter aktivitetens slutt.} Det skal ikke være mulig å registrere møting til en aktivitet etter aktivitetens slutt.
      (Vi antar at det er mulig å møte frem til aktivitetens slutt. Det betyr ikke at profilen unngår prikk dersom den møter under 5 minutter
       før gruppeaktivitetsstart.) Denne restriksjonen vises ikke i ER-modellen.
-    \item \textbf{Ett tidspunkt, én booking per sal.} For et gitt tidspunkt kan en sal bookes av maksimalt én gruppeaktivitet eller én idrettslagstime. Dette er ikke uttrykt i modellen.
+    \item \textbf{Maks en booking per sal om gangen.} For et gitt tidspunkt kan en sal bookes av maksimalt én gruppeaktivitet eller én idrettslagstime. Dette er ikke uttrykt i modellen.
     \item \textbf{Medlemskap for idrettslagstime.} For at en profil skal kunne møte til en idrettslagstime, må den være medlem av idrettslaget. Dette kravet kommer ikke frem i modellen.
+    \item \textbf{Kapasitetsgrense.} Påmelding til en gruppeaktivitet avslås når antall påmeldte er lik salens kapasitet. Tilsvarende avslås oppmøte til en idrettslagstime når antall oppmøtte er lik kapasiteten. Modellen viser ikke disse begrensningene.
+    \item \textbf{48-timersregelen.} En gruppetime skal legges ut 48 timer før den holdes. Denne regelen er en myk forretningsregel som best håndheves i applikasjonskoden, da en hard databaserestriksjon ville hindret instruktører fra å legge ut timer dersom de er noe forsinket, og ikke tillater noen fornuftig margin.
 \end{enumerate}

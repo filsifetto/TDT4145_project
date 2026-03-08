@@ -6,54 +6,58 @@ eller må noe slikt implementeres i programvaren}
 
 I vår modell lagres instruktøren for en gruppeaktivitet som fremmednøkkelen
 \textit{instrukt\_ID} i \textit{Gruppeaktivitet}-tabellen.
-Det finnes ingen restriksjon i databaseskjemaet som hindrer at samme
-\textit{instrukt\_ID} opptrer i to gruppeaktiviteter med overlappende
-tidsrom på samme dato.
-
 En \texttt{UNIQUE}-restriksjon kan kun forhindre identiske verdier, ikke
-overlappende \emph{intervaller}.
-To aktiviteter for samme instruktør på samme dato med delvis
-overlappende start-/slutt-tidspunkt ville derfor ikke bli fanget opp.
+overlappende \emph{intervaller}, og kan dermed ikke fange opp to
+gruppeaktiviteter med samme instruktør i overlappende tidsrom.
+
+\paragraph{Løsning via triggere.}
+Vi har implementert to triggere som håndhever regelen direkte i databasen:
+\begin{itemize}
+    \item \texttt{check\_instruktør\_overlapp\_insert} –
+          kjøres \texttt{BEFORE INSERT} på \textit{Gruppeaktivitet}.
+    \item \texttt{check\_instruktør\_overlapp\_update} –
+          kjøres \texttt{BEFORE UPDATE} på \textit{Gruppeaktivitet}.
+\end{itemize}
+Triggerene sjekker om det finnes en annen rad i \textit{Gruppeaktivitet}
+med samme \textit{instrukt\_ID} og \textit{dato} der
+\textit{start}/\textit{slutt}-intervallene overlapper,
+og avbryter med \texttt{RAISE(ABORT, \ldots)} i så fall.
 
 \paragraph{Konklusjon.}
-Denne regelen \emph{kan ikke} uttrykkes i den relasjonelle modellen
-og må derfor implementeres i applikasjonskoden (eller via en trigger).
-Før en gruppeaktivitet opprettes eller oppdateres, må applikasjonen
-sjekke at det ikke allerede finnes en annen aktivitet med samme
-instruktør der tidsintervallet overlapper.
+Regelen kan ikke uttrykkes med den relasjonelle modellen alene, men er
+fullt ut håndterbar i databasen med to triggere på \textit{Gruppeaktivitet}.
 
 \subsection{Det samme spørsmålet for en bruker. Kan dette løses i modellen eller må det
 gjøres i programvaren?}
 
-Resonnementet er det samme som for instruktører, men situasjonen er
-noe bredere fordi en bruker kan delta i flere typer aktiviteter.
-En profil kan være registrert i \textit{påmeldt\_til} for flere
-gruppeaktiviteter, og i \textit{møter\_til\_idrett} for flere
-idrettslagstimer.
-Det finnes ingen restriksjon i skjemaet som forhindrer overlappende
-tidsrom, verken innenfor samme aktivitetstype eller på tvers av de to.
-En bruker kan altså potensielt kollidere på tre måter:
-\begin{enumerate}
-    \item to gruppeaktiviteter som overlapper,
-    \item to idrettslagstimer som overlapper,
-    \item en gruppeaktivitet og en idrettslagstime som overlapper.
-\end{enumerate}
+Idrettslagstimer er forhåndsbooket for hele idrettslaget og krever ingen individuell
+påmelding – \textit{møter\_til\_idrett} er kun oppmøteregistrering.
+Overlappsregelen er dermed utelukkende relevant for individuelle påmeldinger til
+gruppeaktiviteter via \textit{påmeldt\_til}.
 
-I alle tilfellene krever overlappsjekken sammenligning av
-\textit{dato}, \textit{start} og \textit{slutt} på tvers av rader
-(og potensielt på tvers av tabellene \textit{Gruppeaktivitet} og
-\textit{Idrettslagstime}) for samme \textit{profil\_ID}.
-Siden tidsattributtene ikke ligger i relasjonstabellene
-\textit{påmeldt\_til} og \textit{møter\_til\_idrett}, men i
-\textit{Gruppeaktivitet} og \textit{Idrettslagstime}, kreves det
-en også en join for å utføre sjekken.
-Dette kan ikke uttrykkes med \texttt{UNIQUE} eller \texttt{CHECK}.
+To gruppeaktiviteter for samme profil kan kollidere dersom
+begge har samme \textit{dato} og overlappende \textit{start}/\textit{slutt}.
+Dette kan ikke uttrykkes med \texttt{UNIQUE} eller\texttt{CHECK},
+men \emph{kan} implementeres med triggere.
+
+\paragraph{Løsning via triggere.}
+Vi har implementert to triggere som håndhever regelen direkte i databasen:
+\begin{itemize}
+    \item \texttt{check\_bruker\_overlapp\_påmeldt\_insert} –
+          kjøres \texttt{BEFORE INSERT} på \textit{påmeldt\_til}.
+    \item \texttt{check\_bruker\_overlapp\_påmeldt\_update} –
+          kjøres \texttt{BEFORE UPDATE} på \textit{påmeldt\_til}.
+\end{itemize}
+Triggerene gjør en \texttt{JOIN} fra \textit{påmeldt\_til} til
+\textit{Gruppeaktivitet} for å hente \textit{dato}/\textit{start}/\textit{slutt},
+og avbryter med \texttt{RAISE(ABORT, \ldots)} dersom profilen allerede
+er påmeldt en annen gruppeaktivitet i overlappende tidsrom.
 
 \paragraph{Konklusjon.}
-Også denne regelen må håndteres i applikasjonskoden.
-Ved påmelding til en gruppeaktivitet eller oppmøte til en
-idrettslagstime bør applikasjonen kontrollere at brukeren ikke
-allerede deltar i en annen aktivitet som overlapper i tid.
+Regelen kan ikke uttrykkes med den relasjonelle modellen alene,
+men er fullt ut håndterbar i databasen med to triggere på \textit{påmeldt\_til}.
+Vi har valgt å implementere den direkte i SQL-scriptet,
+slik at applikasjonslaget ikke trenger å håndheve den manuelt.
 
 \subsection{Fra hvilket usecase testes det for / opprettes utestengelse (svartelisting)? Det
 trenger ikke være en av de oppgitte usecasene.}
@@ -68,7 +72,8 @@ registrere oppmøte senest 5~minutter før start.
 Grunnlaget for dette er \textbf{brukstilfelle~3} (registrering av
 oppmøte): det er oppmøteregistreringene i \textit{møter\_til\_gruppe}
 som gjør det mulig å avgjøre hvem som \emph{ikke} har møtt.
-Selve tildelingen av prikker skjer i et eget brukstilfelle; \emph{tildeling av prikker etter oppmøtefrist},
+Selve tildelingen av prikker skjer i et eget brukstilfelle;
+\emph{tildeling av prikker etter oppmøtefrist},
 som etter at oppmøtefristen har passert (5~minutter før start),
 sammenligner \textit{påmeldt\_til} med \textit{møter\_til\_gruppe}
 og oppretter en rad i \textit{Prikk} for de som ikke har møtt.
@@ -76,22 +81,27 @@ Når en profil har fått $\geq 3$ prikker innenfor de siste 30 dagene,
 er den utestengt.
 
 \paragraph{Sjekk.}
-Utestengelsen bør testes for i \textbf{brukstilfelle~2} (booking).
-Før en booking godkjennes, sjekker applikasjonen antall prikker
-for profilen innenfor de siste 30 dagene.
-Dersom det er $\geq 3$, avvises bookingen.
+Utestengelsessjekken er implementert direkte i databasen ved hjelp av
+to triggere på tabellen \textit{påmeldt\_til}:
+\begin{itemize}
+    \item \texttt{check\_utestengelse\_insert} – kjøres \texttt{BEFORE INSERT}
+    \item \texttt{check\_utestengelse\_update} – kjøres \texttt{BEFORE UPDATE}
+\end{itemize}
+Dersom profilen har $\geq 3$ prikker de siste 30 dagene, avbrytes
+operasjonen med \texttt{RAISE(ABORT, \ldots)}.
+Sjekken trenger derfor ikke implementeres i applikasjonslaget
+– databasen håndhever regelen automatisk ved hvert forsøk på påmelding.
 
 Brukstilfelle~6 demonstrerer svartelistingsmekanismen eksplisitt, men
-den naturlige utløseren i et produksjonssystem er
-brukstilfellet for prikk-tildeling beskrevet over, kombinert med
-sjekken i bookingsteget.
+den naturlige triggeren i et produksjonssystem er brukstilfellet for
+prikk-tildeling beskrevet over, kombinert med triggerne i databasen
+som blokkerer påmelding ved utestengelse.
 
 \subsection{Statistikk er det noe som må lagres eksplisitt eller går det an å bare gjøre queries
 for å få svar? Diskuter dette.}
 
-De aller fleste statistikkene som SiT etterspør kan utledes med vanlige
-SQL-spørringer mot den normaliserte databasen, uten å lagre
-aggregerte tall eksplisitt.
+Vi mener det meste av statistikken som er relevant for SiT kan utledes med vanlige
+SQL-spørringer mot databasen. Dette vil også gjøre det enklere å oppdatere statistikken hvis det skjer endringer i databasen.
 
 \paragraph{Eksempler på statistikk som kan beregnes med queries.}
 \begin{itemize}
@@ -111,47 +121,19 @@ aggregerte tall eksplisitt.
           innenfor de siste 30 dagene.
 \end{itemize}
 
-\paragraph{Tilfeller der eksplisitt lagring kan være nødvendig.}
-Problemet oppstår når underliggende data endrer seg over tid og man
-trenger historiske toppverdier.
-Det viktigste eksempelet er \emph{det maksimale antallet påmeldte per økt}.
-Dersom en bruker melder seg av en økt og raden slettes fra
-\textit{påmeldt\_til}, mister man informasjon om at det på et
-tidspunkt var flere påmeldte.
-Med kun gjeldende data kan man finne nåværende antall påmeldte,
-men ikke det historisk høyeste antallet.
-
-Merk at \textit{påmeldt\_til} kan inneholde både bekreftede plasser
-og ventelisteplasser (rader der \texttt{påmelding\_nummer} $>$
-\textit{Sal.kapasitet}).
-Avhengig av hva man ønsker å måle, totalt antall registrerte eller
-kun bekreftede plasser, må spørringen filtrere tilsvarende.
-
-For å bevare den historiske toppverdien finnes flere alternativer:
-\begin{enumerate}
-    \item Legge til et felt \texttt{maks\_påmeldte} på
-          \textit{Gruppeaktivitet} som oppdateres ved hver ny påmelding.
-          I SQLite kan dette vedlikeholdes automatisk med en
-          \texttt{AFTER INSERT}-trigger på \textit{påmeldt\_til} som
-          teller antall rader for den aktuelle gruppeaktiviteten og
-          oppdaterer feltet dersom det nye antallet overstiger
-          gjeldende verdi.
-    \item Beholde avmeldte rader med en statuskolonne (\emph{soft delete})
-          i stedet for å slette dem, slik at man alltid kan telle
-          det totale antallet som har vært påmeldt.
-          Ulempen er at alle andre spørringer mot \textit{påmeldt\_til}
-          (f.eks.\ kapasitetssjekk ved booking) da må filtrere på status,
-          noe som øker kompleksiteten i applikasjonskoden.
-    \item Bruke \texttt{påmelding\_nummer} som tilnærming:
-          siden nummeret tildeles sekvensielt, gir
-          \texttt{MAX(påmelding\_nummer)} blant gjenværende rader et
-          estimat, men verdien blir upresis ved avmeldinger, spesielt
-          dersom personen (eller personene) med høyest nummer melder seg av.
-\end{enumerate}
+\paragraph{Når kan eksplisitt lagring likevel lønne seg?}
+I større systemer kan det være fordelaktig å lagre statistikk eksplisitt.
+Med store datamengder kan aggregerings-spørringer bli trege;
+forhåndsberegnet statistikk, for eksempel i form av materialiserte views
+eller oppsummeringstabeller, gir da raskere tilgang.
+Dersom gamle data slettes eller endres over tid, kan historisk statistikk
+gå tapt med mindre den er lagret eksplisitt.
+I tillegg kan periodiske rapporter beregnes på forhånd og lagres,
+slik at de er raskt tilgjengelige uten å kjøre tunge spørringer på nytt.
 
 \paragraph{Konklusjon.}
-Statistikk trenger i hovedsak \emph{ikke} lagres eksplisitt i vår modell, det meste kan utledes av de normaliserte tabellene med vanlige
-SQL-spørringer.
-Unntaket er historiske toppverdier, som det maksimale antallet
-påmeldte per økt, der man enten må lagre verdien eksplisitt eller
-benytte en "myk-slette-strategi" ("soft delete") for å unngå tap av informasjon.
+Statistikk trenger \emph{ikke} lagres eksplisitt i vår modell.
+For SiTs skala er datamengdene moderate, og alt kan utledes
+av de normaliserte tabellene med vanlige SQL-spørringer.
+I et større system ville det likevel vært aktuelt å vurdere
+eksplisitt lagring av statistikk for ytelse og bevaring av historiske data.
