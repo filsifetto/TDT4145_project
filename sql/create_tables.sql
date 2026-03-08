@@ -8,7 +8,11 @@
 --
 --   1. Prikk ved manglende/for sen oppmøte: En profil som er påmeldt en
 --      gruppeaktivitet uten å registrere oppmøte senest 5 minutter før start
---      skal få en prikk. Regelen krever tidsberegning utenfor databasen.
+--      skal få en prikk. Regelen krever at systemet proaktivt, på et bestemt
+--      tidspunkt, identifiserer profiler som ikke har registrert oppmøte.
+--      Verken constraints eller triggere kan initiere handlinger basert på
+--      fravær av data ved et gitt tidspunkt, fordi triggere fires kun av
+--      eksplisitte datamodifikasjoner.
 --
 --   2. 48-timersregelen: En gruppetime skal legges ut 48 timer før den
 --      holdes. Regelen er en myk forretningsregel som best håndheves i
