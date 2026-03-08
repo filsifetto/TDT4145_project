@@ -123,20 +123,25 @@ Alle tabellene er på \textbf{BCNF} (Boyce–Codd normalform).
 En relasjon er på BCNF dersom venstre side i enhver ikke-triviell funksjonell avhengighet er en supernøkkel.
 Nedenfor begrunnes dette gruppevis.
 
-\paragraph{Sterke entiteter – Fasilitet, Senter, Idrettslag, Aktivitet.}
+\paragraph{Sterke entiteter – Fasilitet, Idrettslag, Aktivitet.}
 Disse har én enkeltattributt som primærnøkkel (\textit{ID}, resp.\ \textit{navn} for Aktivitet).
 Alle øvrige attributter bestemmes entydig av primærnøkkelen, og det finnes ingen andre funksjonelle
 avhengigheter. Dermed er venstre side i enhver ikke-triviell FD en supernøkkel, og tabellene er på BCNF.
-For \textit{Senter} kunne man vurdert \textit{(gate, nummer)} som kandidatnøkkel, men vi antar at
+
+\paragraph{Senter.}
+Primærnøkkelen er \textit{ID}. I tillegg har \textit{navn} en \texttt{UNIQUE}-restriksjon,
+slik at \textit{navn} $\rightarrow$ \textit{ID, gate, nummer, fra, til} også er en
+ikke-triviell FD. Venstresiden er en kandidatnøkkel og dermed en supernøkkel, så BCNF er oppfylt.
+For \textit{(gate, nummer)} kunne man vurdert kandidatnøkkelstatus, men vi antar at
 dette ikke holder: et senter kan i prinsippet flytte eller to sentre kan midlertidig befinne seg i
-samme bygg (samme gateadresse og nummer). Adressen er dermed ikke garantert unik og regnes ikke som
-kandidatnøkkel.
+samme bygg. Adressen er dermed ikke garantert unik og regnes ikke som kandidatnøkkel.
 
 \paragraph{Profil.}
-Primærnøkkelen er \textit{ID}. I tillegg er \textit{epost} unik for hver profil
-(brukstilfellene identifiserer brukere ved epostadresse), slik at
+Primærnøkkelen er \textit{ID}. I tillegg er både \textit{epost} og \textit{telefon}
+unike (\texttt{UNIQUE}) for hver profil, slik at
 \textit{epost} $\rightarrow$ \textit{ID, type, fornavn, etternavn, telefon}
-også er en ikke-triviell FD. Venstresiden er en kandidatnøkkel og dermed en supernøkkel,
+og \textit{telefon} $\rightarrow$ \textit{ID, type, fornavn, etternavn, epost}
+begge er ikke-trivielle FD-er. Venstresidene er kandidatnøkler og dermed supernøkler,
 så BCNF er oppfylt.
 
 \paragraph{Svake entiteter – Bemanning, Sal, Tredemølle, Sykkel, Idrettslagstime, Gruppeaktivitet, Gruppe, Prikk.}
