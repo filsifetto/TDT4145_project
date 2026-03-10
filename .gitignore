@@ -9,3 +9,7 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+
+# Genererte filer
+treningdb.sqlite
+.DS_Store
