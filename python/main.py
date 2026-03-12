@@ -9,6 +9,7 @@ from use_case_2 import book_trening
 from use_case_3 import registrer_oppmote
 from use_case_4 import ukeplan
 from use_case_5 import personlig_besokshistorie
+from use_case_6 import svarteliste
 from db import get_connection
 
 
@@ -85,7 +86,8 @@ def main():
             start_dato  = input("Startdato (YYYY-MM-DD): ").strip()
             personlig_besokshistorie(epost, start_dato)
         elif valg == "6":
-            print("Brukstilfelle 6 er ikke implementert ennå.")
+            epost       = input("Epost: ").strip()
+            svarteliste(epost)
 
         elif valg == "7":
             print("Brukstilfelle 7 er ikke implementert ennå.")
