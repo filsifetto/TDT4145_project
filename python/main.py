@@ -10,6 +10,7 @@ from use_case_3 import registrer_oppmote
 from use_case_4 import ukeplan
 from use_case_5 import personlig_besokshistorie
 from use_case_6 import svarteliste
+from use_case_7 import mest_aktive_bruker
 from db import get_connection
 
 
@@ -90,7 +91,8 @@ def main():
             svarteliste(epost)
 
         elif valg == "7":
-            print("Brukstilfelle 7 er ikke implementert ennå.")
+            maaned = int(input("Måned (1-12): ").strip())
+            mest_aktive_bruker(maaned)
 
         elif valg == "8":
             print("Brukstilfelle 8 er ikke implementert ennå.")
