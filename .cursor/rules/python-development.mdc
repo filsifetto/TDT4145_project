@@ -1,0 +1,85 @@
+---
+globs: *.py,*.pyi,*.sql,*.tex
+description: Project guidelines for a database course project (TDT4145)
+---
+
+# Database Project Guidelines
+
+This is a database course project (TDT4145). The primary deliverable is the **final report** (`rapport/`). The codebase is small and clarity matters more than scalability or engineering best practices.
+
+## Project Structure
+
+```
+project_root/
+├── sql/                        # SQL scripts
+│   └── create_tables.sql       # Table definitions, constraints, queries
+├── database-modeling/          # ER diagram and relational schema artifacts
+│   ├── ER-diagram/
+│   └── relational-schema/
+├── rapport/                    # LaTeX report (main deliverable)
+│   ├── main.tex
+│   ├── packages.sty
+│   ├── title.tex
+│   └── Sections/
+│       ├── 01_ER_diagram.tex
+│       ├── 02_Relational_schema.tex
+│       ├── 03_SQL_script.tex
+│       └── 04_Svar_paa_spoersmaal.tex
+└── README.md
+```
+
+## SQL Guidelines
+
+- Write SQL that is easy to read and understand — this code will appear in the report
+- Use UPPERCASE for SQL keywords (`SELECT`, `FROM`, `WHERE`, `JOIN`, etc.)
+- Use descriptive, lowercase snake_case names for tables and columns
+- Add a short comment above each query or section explaining its purpose
+- Prefer explicit `JOIN ... ON ...` over implicit joins in the `WHERE` clause
+- Always define `PRIMARY KEY`, `FOREIGN KEY`, and relevant constraints explicitly
+
+Example:
+```sql
+-- Find all employees working on a project with a given budget threshold
+SELECT e.name, p.project_name
+FROM employee e
+JOIN works_on w ON e.employee_id = w.employee_id
+JOIN project p ON w.project_id = p.project_id
+WHERE p.budget > 100000;
+```
+
+## Python Guidelines (if used for testing or data population)
+
+Keep Python scripts minimal and straightforward. No need for complex architecture.
+
+- Use `sqlite3` (stdlib) or a simple DB connector — no ORM needed
+- Put database connection/setup in a single file (e.g., `main.py` or `setup.py`)
+- Use descriptive variable names
+- A short docstring at the top of each script is enough documentation
+- Print query results directly for verification — no need for logging frameworks
+
+Example:
+```python
+import sqlite3
+
+conn = sqlite3.connect("database.db")
+cursor = conn.cursor()
+
+cursor.executescript(open("sql/create_tables.sql").read())
+conn.commit()
+conn.close()
+```
+
+## Report (LaTeX) Guidelines
+
+The report is the most important deliverable. Keep it clear, well-structured, and consistent.
+
+- Each section lives in its own file under `rapport/Sections/`
+- SQL code in the report should be wrapped in a `lstlisting` or `minted` environment for proper formatting
+- Figures (ER diagrams, schemas) should have captions and labels for cross-referencing
+- Keep language precise and technical — this is an academic report
+
+## General Principles
+
+- **Clarity first**: Write for a reader who hasn't seen the code before
+- **Report-driven**: If something is shown in the report, make sure it actually works
+- **No over-engineering**: Simple scripts are fine — there's no need for classes, abstraction layers, or test suites
