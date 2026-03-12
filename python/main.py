@@ -6,6 +6,8 @@ Kjør:
 """
 
 from use_case_2 import book_trening
+from use_case_3 import registrer_oppmote
+from db import get_connection
 
 
 def meny():
@@ -22,8 +24,20 @@ def meny():
     print("8. Finn treningspartnere")
     print("0. Avslutt")
 
+"""
+kjører alle SQL-skriptene i sql/create_tables.sql og sql/insert_data.sql som ikke er allerede kjørt.
+"""
+
+
+def run_sql_script():
+    con = get_connection()
+    con.executescript(open("sql/create_tables.sql").read())
+    con.executescript(open("sql/insert_data.sql").read())
+    con.commit()
+    con.close()
 
 def main():
+    run_sql_script()
     while True:
         meny()
         valg = input("Velg: ").strip()
@@ -44,7 +58,9 @@ def main():
             book_trening(epost, aktivitet, dato, starttid, senter_navn)
 
         elif valg == "3":
-            print("Brukstilfelle 3 er ikke implementert ennå.")
+            epost       = input("Epost: ").strip()
+            trening_id  = input("Trening ID: ").strip()
+            registrer_oppmote(epost, trening_id)
 
         elif valg == "4":
             print("Brukstilfelle 4 er ikke implementert ennå.")

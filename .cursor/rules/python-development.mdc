@@ -76,7 +76,7 @@ The report is the most important deliverable. Keep it clear, well-structured, an
 - Each section lives in its own file under `rapport/Sections/`
 - SQL code in the report should be wrapped in a `lstlisting` or `minted` environment for proper formatting
 - Figures (ER diagrams, schemas) should have captions and labels for cross-referencing
-- Keep language precise and technical — this is an academic report
+- Keep language precise and technical — this is an academic reporkt
 
 ## General Principles
 
