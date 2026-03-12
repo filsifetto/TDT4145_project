@@ -1,3 +1,4 @@
+from use_case_6 import antall_prikker_siste_maaned
 """
 Brukstilfelle 2 - Booking av gruppetime
 
@@ -38,6 +39,13 @@ def book_trening(epost: str, aktivitet: str, dato: str,
 
         profil_id = profil["ID"]
         print(f"Bruker funnet: {profil['fornavn']} {profil['etternavn']} (ID {profil_id})")
+
+        prikker = antall_prikker_siste_maaned(epost)
+        if prikker >= 3:
+            print(f"Bruker {profil['fornavn']} {profil['etternavn']} er svartelistet.")
+            sys.exit(1)
+
+        
 
         # Steg 2: Finn gruppeaktiviteten
         aktivitet_rad = con.execute(

@@ -13,39 +13,44 @@ from db import get_connection
 # Parametere
 EPOST = "johnny@stud.ntnu.no"
 
-def svarteliste(epost: str):
-    con = get_connection()
 
+def antall_prikker_siste_maaned(epost: str) -> int:
+    """Returnerer antall prikker brukeren har fått de siste 30 dagene."""
+    con = get_connection()
     try:
-        profil_id = con.execute(
+        row = con.execute(
             "SELECT ID FROM Profil WHERE epost = :epost",
             {"epost": epost}
-        ).fetchone()["ID"]
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"Bruker {epost} ikke funnet.")
+        profil_id = row["ID"]
 
         start_dato = datetime.now() - timedelta(days=30)
         slutt_dato = datetime.now()
 
-        prikker = con.execute(
+        return con.execute(
             "SELECT COUNT(*) FROM Prikk WHERE profil_ID = :profil_id AND dato BETWEEN :start_dato AND :slutt_dato",
             {"profil_id": profil_id, "start_dato": start_dato, "slutt_dato": slutt_dato}
         ).fetchone()[0]
+    finally:
+        con.close()
+
+
+def svarteliste(epost: str):
+    try:
+        prikker = antall_prikker_siste_maaned(epost)
 
         if prikker < 3:
             print(f"Bruker {epost} har ikke tre prikker siste 30 dager.")
             sys.exit(1)
-        
-        con.execute(
-            "UPDATE Profil SET utestengt = 1 WHERE ID = :profil_id",
-            {"profil_id": profil_id}
-        )
-        con.commit()
 
         print(f"Bruker {epost} er svartelistet.")
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
     except sqlite3.Error as e:
         print(f"Feil: {e}")
-        con.rollback()
         sys.exit(1)
-    finally:
-        con.close()
 
 

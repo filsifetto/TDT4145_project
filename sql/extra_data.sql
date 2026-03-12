@@ -84,7 +84,8 @@ INSERT INTO Profil (ID, type, fornavn, etternavn, epost, telefon) VALUES
     (18, 'medlem', 'Ida',     'Nilsen',  'ida.nilsen@stud.ntnu.no',     '94000014'),
     (19, 'medlem', 'Sander',  'Lie',     'sander.lie@stud.ntnu.no',     '94000015'),
     (20, 'medlem', 'Julie',   'Hovden',  'julie.hovden@stud.ntnu.no',   '94000016'),
-    (21, 'ansatt', 'Kristin', 'Haug',    'kristin.haug@sit.no',         '90000005');
+    (21, 'ansatt', 'Kristin', 'Haug',    'kristin.haug@sit.no',         '90000005'),
+    (22, 'medlem', 'Ole',     'Svendsen','ole.svendsen@stud.ntnu.no',   '94000017');
 
 -- ============================================================================
 -- Section 6 - Idrettslag, Grupper, Er_Medlem
@@ -214,6 +215,7 @@ VALUES
 -- Section 11 - Prikk
 -- Profil 7: 3 prikker siste 30 dager (svartelistet)
 -- Profil 8: 2 prikker siste 30 dager (ikke svartelistet)
+-- Profil 22: 4 prikker siste 30 dager (svartelistet)
 -- ============================================================================
 
 INSERT INTO Prikk (profil_ID, ID, dato) VALUES
@@ -221,4 +223,8 @@ INSERT INTO Prikk (profil_ID, ID, dato) VALUES
     (7, 2, '2026-03-01'),
     (7, 3, '2026-03-10'),
     (8, 1, '2026-02-25'),
-    (8, 2, '2026-03-05');
+    (8, 2, '2026-03-05'),
+    (22, 1, '2026-02-15'),
+    (22, 2, '2026-02-22'),
+    (22, 3, '2026-03-02'),
+    (22, 4, '2026-03-10');
