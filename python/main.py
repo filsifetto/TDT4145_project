@@ -7,6 +7,7 @@ Kjør:
 
 from use_case_2 import book_trening
 from use_case_3 import registrer_oppmote
+from use_case_4 import ukeplan
 from db import get_connection
 
 
@@ -24,16 +25,27 @@ def meny():
     print("8. Finn treningspartnere")
     print("0. Avslutt")
 
-"""
-kjører alle SQL-skriptene i sql/create_tables.sql og sql/insert_data.sql som ikke er allerede kjørt.
-"""
+SQL_SCRIPTS = [
+    "sql/create_tables.sql",
+    "sql/insert_data.sql",
+    "sql/extra_data.sql",
+]
 
 
 def run_sql_script():
     con = get_connection()
-    con.executescript(open("sql/create_tables.sql").read())
-    con.executescript(open("sql/insert_data.sql").read())
-    con.commit()
+    con.executescript(
+        "CREATE TABLE IF NOT EXISTS _migrations "
+        "(script TEXT PRIMARY KEY, ran_at TEXT DEFAULT (datetime('now')));"
+    )
+    already_run = {
+        row[0] for row in con.execute("SELECT script FROM _migrations").fetchall()
+    }
+    for script in SQL_SCRIPTS:
+        if script not in already_run:
+            con.executescript(open(script).read())
+            con.execute("INSERT INTO _migrations (script) VALUES (?)", (script,))
+            con.commit()
     con.close()
 
 def main():
@@ -63,7 +75,9 @@ def main():
             registrer_oppmote(epost, trening_id)
 
         elif valg == "4":
-            print("Brukstilfelle 4 er ikke implementert ennå.")
+            start_dag = input("Startdag (YYYY-MM-DD): ").strip()
+            uke       = int(input("Uke: ").strip())
+            ukeplan(start_dag, uke)
 
         elif valg == "5":
             print("Brukstilfelle 5 er ikke implementert ennå.")
