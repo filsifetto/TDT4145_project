@@ -13,3 +13,4 @@
 # Genererte filer
 treningdb.sqlite
 .DS_Store
+__pycache__/

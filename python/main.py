@@ -10,6 +10,8 @@ from use_case_2 import book_trening
 
 def meny():
     print("\n=== TreningDB ===")
+    print("Velg et alternativ:")
+    print("0: Avslutt")
     print("1. Legg inn data (SQL-script)")
     print("2. Book trening")
     print("3. Registrer oppmøte")
