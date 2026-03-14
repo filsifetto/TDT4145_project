@@ -11,8 +11,13 @@ Kjør:
 import sqlite3
 import sys
 import unittest
+from contextlib import ExitStack
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+# Legg til python/-mappen i importstien slik at use_case_*-modulene kan importeres
+# direkte enten man kjører tester fra prosjektroten eller fra python/-mappen.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 # ─── Hjelpefunksjoner ───────────────────────────────────────────────────────
 
@@ -59,6 +64,19 @@ def _insert_base_fixtures(con: sqlite3.Connection):
     """)
 
 
+def _no_close_proxy(con: sqlite3.Connection):
+    """Wraps a connection so that close() is a no-op.
+
+    Use case functions call con.close() in their finally-blocks. When tests
+    pass a shared connection as the mock return value, that call would close
+    the connection and break subsequent assertions.  This proxy forwards every
+    call to the real connection except close(), which becomes a no-op.
+    """
+    proxy = MagicMock(wraps=con)
+    proxy.close = MagicMock()  # Override close so the shared connection stays open
+    return proxy
+
+
 # ─── TestSchema ─────────────────────────────────────────────────────────────
 
 class TestSchema(unittest.TestCase):
@@ -101,7 +119,7 @@ class TestSchema(unittest.TestCase):
 
     def test_check_instruktør_rolle_avvist(self):
         """Et medlem (type='medlem') skal ikke kunne settes som instruktør."""
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self._insert_ga(instrukt_id=2)  # profil 2 er 'medlem'
         self.assertIn("ansatt", str(ctx.exception))
 
@@ -116,7 +134,7 @@ class TestSchema(unittest.TestCase):
     def test_check_instruktør_overlapp_avvist(self):
         """Samme instruktør kan ikke lede to aktiviteter som overlapper."""
         self._insert_ga(ga_id=1, start="10:00", slutt="11:00")
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self._insert_ga(ga_id=2, sal_id=1, start="10:30", slutt="11:30")
         self.assertIn("overlapper", str(ctx.exception))
 
@@ -137,7 +155,7 @@ class TestSchema(unittest.TestCase):
         )
         self.con.commit()
         self._insert_ga(ga_id=1, instrukt_id=1, start="10:00", slutt="11:00")
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self._insert_ga(ga_id=2, instrukt_id=4, start="10:30", slutt="11:30")
         self.assertIn("booket", str(ctx.exception))
 
@@ -164,7 +182,7 @@ class TestSchema(unittest.TestCase):
                 (2, 2, date('now', 'localtime', '-10 days')),
                 (2, 3, date('now', 'localtime', '-15 days'));
         """)
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute(
                 "INSERT INTO påmeldt_til VALUES (1,1,1,2,1)"
             )
@@ -202,7 +220,7 @@ class TestSchema(unittest.TestCase):
         self.con.commit()
         self.con.execute("INSERT INTO påmeldt_til VALUES (1,1,1,2,1)")
         self.con.commit()
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute("INSERT INTO påmeldt_til VALUES (1,2,2,2,1)")
         self.assertIn("overlapper", str(ctx.exception))
 
@@ -222,7 +240,7 @@ class TestSchema(unittest.TestCase):
         )
         self.con.execute("INSERT INTO påmeldt_til VALUES (1,1,1,2,1)")
         self.con.commit()
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute("DELETE FROM påmeldt_til WHERE profil_ID=2")
         self.assertIn("Avbestilling", str(ctx.exception))
 
@@ -269,7 +287,7 @@ class TestSchema(unittest.TestCase):
         )
         self.con.commit()
         # Bruker 4 (rang 3) overstiger kapasiteten
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute(
                 "INSERT INTO møter_til_gruppe VALUES (1,1,1,4, datetime('now','localtime','-10 minutes'))"
             )
@@ -303,7 +321,7 @@ class TestSchema(unittest.TestCase):
         self.con.execute("INSERT INTO møter_til_idrett VALUES (1,3,1,2)")
         self.con.commit()
         # Andre dropin avvises
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute("INSERT INTO møter_til_idrett VALUES (1,3,1,3)")
         self.assertIn("kapasitetsgrensen", str(ctx.exception))
 
@@ -327,7 +345,7 @@ class TestSchema(unittest.TestCase):
         )
         self.con.commit()
         # profil 2 er IKKE registrert som er_medlem
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute("INSERT INTO møter_til_idrett VALUES (1,3,1,2)")
         self.assertIn("medlem", str(ctx.exception))
 
@@ -370,7 +388,7 @@ class TestSchema(unittest.TestCase):
         )
         self.con.execute("INSERT INTO påmeldt_til VALUES (1,1,1,2,1)")
         self.con.commit()
-        with self.assertRaises(sqlite3.OperationalError) as ctx:
+        with self.assertRaises(sqlite3.IntegrityError) as ctx:
             self.con.execute(
                 "INSERT INTO møter_til_gruppe VALUES (1,1,1,2, datetime('now','localtime'))"
             )
@@ -396,7 +414,11 @@ class TestBookTrening(unittest.TestCase):
         self.full_con.commit()
 
     def _patch_con(self):
-        return patch("use_case_2.get_connection", return_value=self.full_con)
+        proxy = _no_close_proxy(self.full_con)
+        stack = ExitStack()
+        stack.enter_context(patch("use_case_2.get_connection", return_value=proxy))
+        stack.enter_context(patch("use_case_6.get_connection", return_value=proxy))
+        return stack
 
     def test_vellykket_booking(self):
         """Vellykket booking oppretter en rad i påmeldt_til."""
@@ -495,7 +517,7 @@ class TestBookTrening(unittest.TestCase):
         profil_id = self.full_con.execute(
             "SELECT ID FROM Profil WHERE epost='johnny@stud.ntnu.no'"
         ).fetchone()["ID"]
-        with self.assertRaises(sqlite3.OperationalError):
+        with self.assertRaises(sqlite3.IntegrityError):
             self.full_con.execute(
                 "INSERT INTO påmeldt_til VALUES (1,10,100,?,1)", (profil_id,)
             )
@@ -563,7 +585,8 @@ class TestRegistrerOppmote(unittest.TestCase):
         self.con.close()
 
     def _patch_con(self):
-        return patch("use_case_3.get_connection", return_value=self.con)
+        proxy = _no_close_proxy(self.con)
+        return patch("use_case_3.get_connection", return_value=proxy)
 
     def test_vellykket_oppmote(self):
         """Vellykket oppmøte oppretter en rad i møter_til_gruppe."""
@@ -599,21 +622,21 @@ class TestRegistrerOppmote(unittest.TestCase):
 
     def test_oppmøte_etter_slutt(self):
         """Registrering av oppmøte etter aktivitetens slutt avvises."""
-        # Aktivitet som sluttet for 10 minutter siden
+        # Bruker gårsdagens dato for å unngå sal- og instruktør-overlapp med
+        # aktiviteten opprettet i setUp (som er på dagens dato og pågår akkurat nå).
         self.con.execute(
             """INSERT INTO Gruppeaktivitet
                (senter_ID, sal_ID, ID, start, slutt, dato, aktivitet_navn, instrukt_ID)
                VALUES (1,1,2,
-                       strftime('%H:%M', datetime('now','localtime','-70 minutes')),
-                       strftime('%H:%M', datetime('now','localtime','-10 minutes')),
-                       date('now','localtime'),
+                       '08:00', '09:00',
+                       date('now','localtime','-1 day'),
                        'Spin60', 1)"""
         )
         self.con.execute("INSERT INTO påmeldt_til VALUES (1,1,2,2,1)")
         self.con.commit()
         with self._patch_con():
             from use_case_3 import registrer_oppmote
-            with self.assertRaises((SystemExit, sqlite3.OperationalError)):
+            with self.assertRaises((SystemExit, sqlite3.IntegrityError)):
                 registrer_oppmote("johnny@test.no", 2)
 
 
