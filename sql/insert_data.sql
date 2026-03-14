@@ -156,3 +156,43 @@ INSERT INTO Gruppeaktivitet (senter_ID, sal_ID, ID, start, slutt, dato, aktivite
 INSERT INTO Gruppeaktivitet (senter_ID, sal_ID, ID, start, slutt, dato, aktivitet_navn, instrukt_ID) VALUES
     (2, 1,  6, '08:00', '09:00', '2026-03-18', 'Spin60',     15),
     (2, 1,  7, '17:30', '18:15', '2026-03-18', 'Spin45',     13);
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Påmeldinger  (brukstilfelle 8 – treningspartnere)
+-- Flere brukere meldes på de samme spinningtimene slik at
+-- self-join-queriet i BT8 gir meningsfulle resultater.
+--
+--   Johnny (4): Øya GA 1, 7, 10
+--   Emma   (5): Øya GA 1, 7, 10
+--   Sofie  (6): Øya GA 1, 7
+--   Mikkel (7): Øya GA 7, Dragvoll GA 3
+-- ════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO påmeldt_til (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID, påmelding_nummer) VALUES
+    (1, 1,  1, 4, 1),
+    (1, 1,  1, 5, 2),
+    (1, 1,  1, 6, 3),
+    (1, 1,  7, 4, 1),
+    (1, 1,  7, 5, 2),
+    (1, 1,  7, 6, 3),
+    (1, 1,  7, 7, 4),
+    (1, 1, 10, 4, 1),
+    (1, 1, 10, 5, 2),
+    (2, 1,  3, 7, 1);
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Oppmøte  (brukstilfelle 8 – treningspartnere)
+-- Registrerer at brukerne faktisk møtte opp.
+-- ════════════════════════════════════════════════════════════════════════════
+
+INSERT INTO møter_til_gruppe (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID, tidspunkt) VALUES
+    (1, 1,  1, 4, '2026-03-16 06:55'),
+    (1, 1,  1, 5, '2026-03-16 06:56'),
+    (1, 1,  1, 6, '2026-03-16 06:57'),
+    (1, 1,  7, 4, '2026-03-17 18:25'),
+    (1, 1,  7, 5, '2026-03-17 18:26'),
+    (1, 1,  7, 6, '2026-03-17 18:27'),
+    (1, 1,  7, 7, '2026-03-17 18:28'),
+    (1, 1, 10, 4, '2026-03-18 18:25'),
+    (1, 1, 10, 5, '2026-03-18 18:26'),
+    (2, 1,  3, 7, '2026-03-17 06:55');

@@ -6,6 +6,7 @@ Kjør:
 """
 
 from use_case_2 import book_trening
+from use_case_8 import finn_treningspartnere
 
 
 def meny():
@@ -59,7 +60,7 @@ def main():
             print("Brukstilfelle 7 er ikke implementert ennå.")
 
         elif valg == "8":
-            print("Brukstilfelle 8 er ikke implementert ennå.")
+            finn_treningspartnere()
 
         else:
             print("Ugyldig valg, prøv igjen.")
