@@ -5,13 +5,13 @@ Kjør:
     python python/main.py
 """
 
+from data_sync import run_startup_scripts, sync_demo_data
 from use_case_2 import book_trening
 from use_case_3 import registrer_oppmote
 from use_case_4 import ukeplan
 from use_case_5 import personlig_besokshistorie
 from use_case_6 import svarteliste
 from use_case_7 import mest_aktive_bruker
-from db import get_connection
 from use_case_8 import finn_treningspartnere
 
 
@@ -28,31 +28,18 @@ def meny():
     print("8. Finn treningspartnere")
     print("0. Avslutt")
 
-SQL_SCRIPTS = [
-    "sql/create_tables.sql",
-    "sql/insert_data.sql",
-    "sql/extra_data.sql",
-]
 
+def _kjor_menyalternativ(action):
+    try:
+        action()
+    except SystemExit:
+        pass
+    except Exception as e:
+        print(f"Uventet feil: {e}")
 
-def run_sql_script():
-    con = get_connection()
-    con.executescript(
-        "CREATE TABLE IF NOT EXISTS _migrations "
-        "(script TEXT PRIMARY KEY, ran_at TEXT DEFAULT (datetime('now')));"
-    )
-    already_run = {
-        row[0] for row in con.execute("SELECT script FROM _migrations").fetchall()
-    }
-    for script in SQL_SCRIPTS:
-        if script not in already_run:
-            con.executescript(open(script).read())
-            con.execute("INSERT INTO _migrations (script) VALUES (?)", (script,))
-            con.commit()
-    con.close()
 
 def main():
-    run_sql_script()
+    run_startup_scripts()
     while True:
         meny()
         valg = input("Velg: ").strip()
@@ -62,40 +49,42 @@ def main():
             break
 
         elif valg == "1":
-            print("Kjør: sqlite3 treningdb.sqlite '.read sql/insert_data.sql'")
+            _kjor_menyalternativ(lambda: sync_demo_data(vis_status=True))
 
         elif valg == "2":
-            epost       = input("Epost: ").strip()
-            aktivitet   = input("Aktivitet (f.eks. Spin60): ").strip()
-            dato        = input("Dato (YYYY-MM-DD): ").strip()
-            starttid    = input("Starttid (HH:MM): ").strip()
+            epost = input("Epost: ").strip()
+            aktivitet = input("Aktivitet (f.eks. Spin60): ").strip()
+            dato = input("Dato (YYYY-MM-DD): ").strip()
+            starttid = input("Starttid (HH:MM): ").strip()
             senter_navn = input("Senter: ").strip()
-            book_trening(epost, aktivitet, dato, starttid, senter_navn)
+            _kjor_menyalternativ(
+                lambda: book_trening(epost, aktivitet, dato, starttid, senter_navn)
+            )
 
         elif valg == "3":
-            epost       = input("Epost: ").strip()
-            trening_id  = input("Trening ID: ").strip()
-            registrer_oppmote(epost, trening_id)
+            epost = input("Epost: ").strip()
+            _kjor_menyalternativ(lambda: registrer_oppmote(epost))
 
         elif valg == "4":
             start_dag = input("Startdag (YYYY-MM-DD): ").strip()
-            uke       = int(input("Uke: ").strip())
-            ukeplan(start_dag, uke)
+            uke = int(input("Uke: ").strip())
+            _kjor_menyalternativ(lambda: ukeplan(start_dag, uke))
 
         elif valg == "5":
-            epost       = input("Epost: ").strip()
-            start_dato  = input("Startdato (YYYY-MM-DD): ").strip()
-            personlig_besokshistorie(epost, start_dato)
+            epost = input("Epost: ").strip()
+            start_dato = input("Startdato (YYYY-MM-DD): ").strip()
+            _kjor_menyalternativ(lambda: personlig_besokshistorie(epost, start_dato))
+
         elif valg == "6":
-            epost       = input("Epost: ").strip()
-            svarteliste(epost)
+            epost = input("Epost: ").strip()
+            _kjor_menyalternativ(lambda: svarteliste(epost))
 
         elif valg == "7":
             maaned = int(input("Måned (1-12): ").strip())
-            mest_aktive_bruker(maaned)
+            _kjor_menyalternativ(lambda: mest_aktive_bruker(maaned))
 
         elif valg == "8":
-            finn_treningspartnere()
+            _kjor_menyalternativ(finn_treningspartnere)
 
         else:
             print("Ugyldig valg, prøv igjen.")

@@ -232,7 +232,7 @@ CREATE TABLE påmeldt_til (
     sal_ID             INTEGER NOT NULL,
     gruppeaktivitet_ID INTEGER NOT NULL,
     profil_ID          INTEGER NOT NULL,
-    påmelding_nummer   INTEGER NOT NULL,
+    påmelding_nummer   INTEGER CHECK (påmelding_nummer IS NULL OR påmelding_nummer > 0),
     PRIMARY KEY (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID),
     UNIQUE (senter_ID, sal_ID, gruppeaktivitet_ID, påmelding_nummer),
     FOREIGN KEY (senter_ID, sal_ID, gruppeaktivitet_ID)
@@ -243,6 +243,31 @@ CREATE TABLE påmeldt_til (
 -- ============================================================================
 -- Triggere
 -- ============================================================================
+
+CREATE TRIGGER sett_påmelding_nummer_insert
+AFTER INSERT ON påmeldt_til
+FOR EACH ROW
+WHEN NEW.påmelding_nummer IS NULL
+BEGIN
+    UPDATE påmeldt_til
+    SET påmelding_nummer = (
+        SELECT COALESCE(MAX(pt.påmelding_nummer), 0) + 1
+        FROM påmeldt_til pt
+        WHERE pt.senter_ID          = NEW.senter_ID
+          AND pt.sal_ID             = NEW.sal_ID
+          AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+          AND NOT (
+              pt.senter_ID          = NEW.senter_ID
+              AND pt.sal_ID         = NEW.sal_ID
+              AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+              AND pt.profil_ID      = NEW.profil_ID
+          )
+    )
+    WHERE senter_ID          = NEW.senter_ID
+      AND sal_ID             = NEW.sal_ID
+      AND gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+      AND profil_ID          = NEW.profil_ID;
+END;
 
 CREATE TRIGGER check_møter_til_gruppe_etter_slutt
 BEFORE INSERT ON møter_til_gruppe

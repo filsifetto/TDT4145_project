@@ -10,13 +10,16 @@ Kjør:
 
 import sqlite3
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from io import StringIO
 
 # ─── Hjelpefunksjoner ───────────────────────────────────────────────────────
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "python"))
 SCHEMA_PATH = ROOT / "sql" / "create_tables.sql"
 INSERTS_PATH = ROOT / "sql" / "insert_data.sql"
 
@@ -35,6 +38,10 @@ def build_db_with_data() -> sqlite3.Connection:
     con = build_db()
     con.executescript(INSERTS_PATH.read_text())
     return con
+
+
+def _table_count(con: sqlite3.Connection, table_name: str) -> int:
+    return con.execute(f'SELECT COUNT(*) FROM "{table_name}"').fetchone()[0]
 
 
 def _insert_base_fixtures(con: sqlite3.Connection):
@@ -57,6 +64,156 @@ def _insert_base_fixtures(con: sqlite3.Connection):
         INSERT INTO Profil (ID, type, fornavn, etternavn, epost, telefon)
             VALUES (3, 'medlem', 'Emma', 'Bakke', 'emma@test.no', '90000003');
     """)
+
+
+class TestDataImport(unittest.TestCase):
+    """Tester brukstilfelle 1 og additiv innlasting av demo-data."""
+
+    def test_build_demo_source_reconciles_conflicting_bookings(self):
+        """Kildedatasettet skal beholde flere deltakere per time, men hoppe over dubletter."""
+        import data_sync
+
+        con = data_sync.build_demo_source()
+        self.addCleanup(con.close)
+
+        ga7 = con.execute(
+            """
+            SELECT profil_ID, påmelding_nummer
+            FROM påmeldt_til
+            WHERE senter_ID = 1 AND sal_ID = 1 AND gruppeaktivitet_ID = 7
+            ORDER BY påmelding_nummer
+            """
+        ).fetchall()
+        ga1 = con.execute(
+            """
+            SELECT profil_ID, påmelding_nummer
+            FROM påmeldt_til
+            WHERE senter_ID = 1 AND sal_ID = 1 AND gruppeaktivitet_ID = 1
+            ORDER BY påmelding_nummer
+            """
+        ).fetchall()
+
+        self.assertEqual([(row["profil_ID"], row["påmelding_nummer"]) for row in ga7],
+                         [(4, 1), (5, 2), (6, 3), (7, 4), (8, 5)])
+        self.assertEqual([(row["profil_ID"], row["påmelding_nummer"]) for row in ga1],
+                         [(4, 1), (5, 2), (6, 3), (10, 4)])
+
+    def test_sync_demo_data_only_adds_missing_rows(self):
+        """Brukstilfelle 1 skal ikke bygge databasen på nytt eller slette eksisterende data."""
+        import db
+        import data_sync
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_db = Path(tmpdir) / "treningdb.sqlite"
+            with patch("db.DB_PATH", temp_db):
+                con = db.get_connection()
+                con.executescript(SCHEMA_PATH.read_text())
+                con.executescript(INSERTS_PATH.read_text())
+                con.execute(
+                    """
+                    INSERT INTO Profil (ID, type, fornavn, etternavn, epost, telefon)
+                    VALUES (99, 'medlem', 'Behold', 'Meg', 'behold.meg@test.no', '99999999')
+                    """
+                )
+                con.commit()
+                before_profiles = _table_count(con, "Profil")
+                con.close()
+
+                data_sync.sync_demo_data()
+
+                repaired = db.get_connection()
+                self.addCleanup(repaired.close)
+
+                self.assertEqual(
+                    repaired.execute("SELECT COUNT(*) FROM Profil WHERE ID = 99").fetchone()[0],
+                    1,
+                )
+                self.assertGreater(_table_count(repaired, "Profil"), before_profiles)
+                self.assertEqual(
+                    repaired.execute(
+                        """
+                        SELECT påmelding_nummer
+                        FROM påmeldt_til
+                        WHERE senter_ID = 1 AND sal_ID = 1 AND gruppeaktivitet_ID = 7 AND profil_ID = 8
+                        """
+                    ).fetchone()[0],
+                    5,
+                )
+                self.assertEqual(
+                    repaired.execute(
+                        """
+                        SELECT påmelding_nummer
+                        FROM påmeldt_til
+                        WHERE senter_ID = 1 AND sal_ID = 1 AND gruppeaktivitet_ID = 1 AND profil_ID = 10
+                        """
+                    ).fetchone()[0],
+                    4,
+                )
+
+    def test_get_connection_migrates_old_påmeldt_til_schema(self):
+        """Eksisterende databasefiler med gammel påmeldt_til-struktur skal oppgraderes automatisk."""
+        import db
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_db = Path(tmpdir) / "treningdb.sqlite"
+            con = sqlite3.connect(temp_db)
+            con.executescript(SCHEMA_PATH.read_text())
+            con.executescript("""
+                DROP TRIGGER IF EXISTS sett_påmelding_nummer_insert;
+                DROP TRIGGER IF EXISTS check_avbestillingsfrist;
+                DROP TRIGGER IF EXISTS check_bruker_overlapp_påmeldt_insert;
+                DROP TRIGGER IF EXISTS check_bruker_overlapp_påmeldt_update;
+                DROP TRIGGER IF EXISTS check_utestengelse_insert;
+                DROP TRIGGER IF EXISTS check_utestengelse_update;
+                DROP TABLE påmeldt_til;
+                CREATE TABLE påmeldt_til (
+                    senter_ID          INTEGER NOT NULL,
+                    sal_ID             INTEGER NOT NULL,
+                    gruppeaktivitet_ID INTEGER NOT NULL,
+                    profil_ID          INTEGER NOT NULL,
+                    påmelding_nummer   INTEGER NOT NULL,
+                    PRIMARY KEY (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID),
+                    UNIQUE (senter_ID, sal_ID, gruppeaktivitet_ID, påmelding_nummer),
+                    FOREIGN KEY (senter_ID, sal_ID, gruppeaktivitet_ID)
+                        REFERENCES Gruppeaktivitet(senter_ID, sal_ID, ID) ON DELETE CASCADE,
+                    FOREIGN KEY (profil_ID) REFERENCES Profil(ID) ON DELETE CASCADE
+                );
+            """)
+            con.commit()
+            con.close()
+
+            with patch("db.DB_PATH", temp_db):
+                migrated = db.get_connection()
+                self.addCleanup(migrated.close)
+
+                info = migrated.execute("PRAGMA table_info('påmeldt_til')").fetchall()
+                pamelding_not_null = next(row["notnull"] for row in info if row["name"] == "påmelding_nummer")
+                trigger = migrated.execute(
+                    "SELECT name FROM sqlite_master WHERE type='trigger' AND name='sett_påmelding_nummer_insert'"
+                ).fetchone()
+                lingering_refs = migrated.execute(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE sql LIKE '%påmeldt_til_gammel%'"
+                ).fetchone()[0]
+
+                self.assertEqual(pamelding_not_null, 0)
+                self.assertIsNotNone(trigger)
+                self.assertEqual(lingering_refs, 0)
+
+
+class TestMainMenu(unittest.TestCase):
+    """Tester at menyloopen tåler forventede feil i brukstilfellene."""
+
+    def test_kjor_menyalternativ_svelger_systemexit(self):
+        import main
+
+        called = {"ran": False}
+
+        def _action():
+            called["ran"] = True
+            raise SystemExit(1)
+
+        main._kjor_menyalternativ(_action)
+        self.assertTrue(called["ran"])
 
 
 # ─── TestSchema ─────────────────────────────────────────────────────────────
@@ -182,6 +339,34 @@ class TestSchema(unittest.TestCase):
         self.con.commit()
         count = self.con.execute("SELECT COUNT(*) FROM påmeldt_til").fetchone()[0]
         self.assertEqual(count, 1)
+
+    def test_påmelding_nummer_settes_automatisk(self):
+        """Påmelding uten eksplisitt nummer skal få neste ledige påmelding_nummer."""
+        self._insert_ga()
+        self.con.execute(
+            """
+            INSERT INTO påmeldt_til
+                (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID)
+            VALUES (1,1,1,2)
+            """
+        )
+        self.con.execute(
+            """
+            INSERT INTO påmeldt_til
+                (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID)
+            VALUES (1,1,1,3)
+            """
+        )
+        self.con.commit()
+
+        rows = self.con.execute(
+            """
+            SELECT profil_ID, påmelding_nummer
+            FROM påmeldt_til
+            ORDER BY påmelding_nummer
+            """
+        ).fetchall()
+        self.assertEqual([(row[0], row[1]) for row in rows], [(2, 1), (3, 2)])
 
     # -- Brukeroverlapp ved påmelding ------------------------------------------
 
@@ -575,6 +760,16 @@ class TestRegistrerOppmote(unittest.TestCase):
         count = self.con.execute("SELECT COUNT(*) FROM møter_til_gruppe").fetchone()[0]
         self.assertEqual(count, 1)
 
+    def test_vellykket_oppmote_med_aktivitetsnavn(self):
+        """Bruker skal kunne velge trening via aktivitetsnavn i stedet for intern ID."""
+        self.con.execute("INSERT INTO påmeldt_til VALUES (1,1,1,2,1)")
+        self.con.commit()
+        with self._patch_con(), patch("builtins.input", return_value="Spin60"):
+            from use_case_3 import registrer_oppmote
+            registrer_oppmote("johnny@test.no")
+        count = self.con.execute("SELECT COUNT(*) FROM møter_til_gruppe").fetchone()[0]
+        self.assertEqual(count, 1)
+
     def test_bruker_ikke_funnet(self):
         """Ukjent epost gir SystemExit."""
         with self._patch_con():
@@ -615,6 +810,44 @@ class TestRegistrerOppmote(unittest.TestCase):
             from use_case_3 import registrer_oppmote
             with self.assertRaises((SystemExit, sqlite3.OperationalError)):
                 registrer_oppmote("johnny@test.no", 2)
+
+
+class TestUkeplan(unittest.TestCase):
+    """Tester brukstilfelle 4 – ukeplan."""
+
+    def setUp(self):
+        self.con = build_db()
+        self.con.executescript("""
+            INSERT INTO Senter (ID, navn, gate, nummer, fra, til)
+                VALUES (1, 'TestSenter', 'Testgate', '1', '06:00', '22:00');
+
+            INSERT INTO Sal (senter_ID, ID, type, kapasitet)
+                VALUES (1, 1, 'spinning', 20);
+
+            INSERT INTO Aktivitet (navn, kategori)
+                VALUES ('Spin60', 'Spin');
+
+            INSERT INTO Profil (ID, type, fornavn, etternavn, epost, telefon)
+                VALUES (1, 'ansatt', 'Hanne', 'Fjeld', 'hanne@test.no', '90000001');
+
+            INSERT INTO Gruppeaktivitet
+                (senter_ID, sal_ID, ID, start, slutt, dato, aktivitet_navn, instrukt_ID)
+            VALUES
+                (1, 1, 1, '10:00', '11:00', '2030-01-01', 'Spin60', 1),
+                (1, 1, 2, '12:00', '13:00', '2030-01-02', 'Spin60', 1);
+        """)
+
+    def tearDown(self):
+        self.con.close()
+
+    def test_ukeplan_viser_dato_per_kt(self):
+        with patch("use_case_4.get_connection", return_value=self.con), patch("sys.stdout", new_callable=StringIO) as stdout:
+            from use_case_4 import ukeplan
+            ukeplan("2030-01-01", 1)
+
+        output = stdout.getvalue()
+        self.assertIn("2030-01-01 | Spin60 | 10:00-11:00 | TestSenter | sal 1", output)
+        self.assertIn("2030-01-02 | Spin60 | 12:00-13:00 | TestSenter | sal 1", output)
 
 
 if __name__ == "__main__":

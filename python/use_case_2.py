@@ -10,7 +10,6 @@ Kjør:
 """
 
 import sqlite3
-import sys
 from db import get_connection
 
 # Parametere
@@ -21,8 +20,37 @@ STARTTID    = "18:30"
 SENTER_NAVN = "Øya treningssenter"
 
 
+def _finn_senter(con, senter_input: str):
+    senter_input = senter_input.strip()
+    senter_input_lav = senter_input.lower()
+
+    alle = con.execute("SELECT ID, navn FROM Senter ORDER BY navn").fetchall()
+
+    eksakt = [rad for rad in alle if rad["navn"].lower() == senter_input_lav]
+    if eksakt:
+        return eksakt[0]
+
+    delvis = [rad for rad in alle if senter_input_lav in rad["navn"].lower()]
+
+    if len(delvis) == 1:
+        print(f"Tolket '{senter_input}' som '{delvis[0]['navn']}'.")
+        return delvis[0]
+
+    if len(delvis) > 1:
+        print(f"Fant flere sentre som matcher '{senter_input}':")
+        for rad in delvis:
+            print(f"  - {rad['navn']}")
+        print("Skriv litt mer av navnet så vi velger riktig senter.")
+        return None
+
+    print(f"Fant ingen sentre som matcher '{senter_input}'.")
+    print("Tilgjengelige sentre:")
+    for rad in alle:
+        print(f"  - {rad['navn']}")
+    return None
+
 def book_trening(epost: str, aktivitet: str, dato: str,
-                 starttid: str, senter_navn: str) -> None:
+                 starttid: str, senter_navn: str) -> bool:
 
     con = get_connection()
 
@@ -35,7 +63,7 @@ def book_trening(epost: str, aktivitet: str, dato: str,
 
         if profil is None:
             print(f"Feil: Fant ingen bruker med epost '{epost}'.")
-            sys.exit(1)
+            return False
 
         profil_id = profil["ID"]
         print(f"Bruker funnet: {profil['fornavn']} {profil['etternavn']} (ID {profil_id})")
@@ -43,7 +71,14 @@ def book_trening(epost: str, aktivitet: str, dato: str,
         prikker = antall_prikker_siste_maaned(epost)
         if prikker >= 3:
             print(f"Bruker {profil['fornavn']} {profil['etternavn']} er svartelistet.")
-            sys.exit(1)
+            return False
+
+        valgt_senter = _finn_senter(con, senter_navn)
+        if valgt_senter is None:
+            return False
+
+        senter_id = valgt_senter["ID"]
+        valgt_senter_navn = valgt_senter["navn"]
 
         
 
@@ -57,20 +92,19 @@ def book_trening(epost: str, aktivitet: str, dato: str,
             WHERE ga.aktivitet_navn = :aktivitet
               AND ga.dato           = :dato
               AND ga.start          = :starttid
-              AND s.navn            = :senter_navn
+                            AND ga.senter_ID       = :senter_id
             """,
             {"aktivitet": aktivitet, "dato": dato,
-             "starttid": starttid, "senter_navn": senter_navn}
+                         "starttid": starttid, "senter_id": senter_id}
         ).fetchone()
 
         if aktivitet_rad is None:
             print(
                 f"Feil: Fant ingen trening '{aktivitet}' "
-                f"den {dato} kl. {starttid} på {senter_navn}."
+                f"den {dato} kl. {starttid} på {valgt_senter_navn}."
             )
-            sys.exit(1)
+            return False
 
-        senter_id = aktivitet_rad["senter_ID"]
         sal_id    = aktivitet_rad["sal_ID"]
         ga_id     = aktivitet_rad["ga_id"]
 
@@ -79,21 +113,40 @@ def book_trening(epost: str, aktivitet: str, dato: str,
             f"{aktivitet_rad['slutt']} på {aktivitet_rad['senter']}"
         )
 
-        # Steg 3: Sett inn booking
-        # påmelding_nummer = neste ledige nummer (ventelisterekkefølge)
+        eksisterende = con.execute(
+            """
+            SELECT påmelding_nummer FROM påmeldt_til
+            WHERE senter_ID          = :senter_id
+              AND sal_ID             = :sal_id
+              AND gruppeaktivitet_ID = :ga_id
+              AND profil_ID          = :profil_id
+            """,
+            {"senter_id": senter_id, "sal_id": sal_id,
+             "ga_id": ga_id, "profil_id": profil_id}
+        ).fetchone()
+
+        if eksisterende is not None:
+            kapasitet = con.execute(
+                "SELECT kapasitet FROM Sal WHERE senter_ID = :senter_id AND ID = :sal_id",
+                {"senter_id": senter_id, "sal_id": sal_id}
+            ).fetchone()["kapasitet"]
+
+            rang = eksisterende["påmelding_nummer"]
+            print("\nDu var allerede påmeldt denne treningen.")
+            print(f"  Aktivitet : {aktivitet}")
+            print(f"  Dato/tid  : {dato} kl. {starttid}")
+            print(f"  Senter    : {valgt_senter_navn}")
+            print(f"  Plass nr. : {rang} av {kapasitet}")
+            if rang > kapasitet:
+                print(f"  ** Du står på venteliste (plass {rang - kapasitet} i køen) **")
+            return True
+
+        # Steg 3: Sett inn booking. Databasen setter påmelding_nummer automatisk.
         con.execute(
             """
             INSERT INTO påmeldt_til
-                (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID, påmelding_nummer)
-            VALUES (:senter_id, :sal_id, :ga_id, :profil_id,
-                COALESCE(
-                    (SELECT MAX(påmelding_nummer)
-                     FROM påmeldt_til
-                     WHERE senter_ID          = :senter_id
-                       AND sal_ID             = :sal_id
-                       AND gruppeaktivitet_ID = :ga_id),
-                    0) + 1
-            )
+                (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID)
+            VALUES (:senter_id, :sal_id, :ga_id, :profil_id)
             """,
             {"senter_id": senter_id, "sal_id": sal_id,
              "ga_id": ga_id, "profil_id": profil_id}
@@ -121,10 +174,11 @@ def book_trening(epost: str, aktivitet: str, dato: str,
         print(f"\nBooking vellykket!")
         print(f"  Aktivitet : {aktivitet}")
         print(f"  Dato/tid  : {dato} kl. {starttid}")
-        print(f"  Senter    : {senter_navn}")
+        print(f"  Senter    : {valgt_senter_navn}")
         print(f"  Plass nr. : {rang} av {kapasitet}")
         if rang > kapasitet:
             print(f"  ** Du er på venteliste (plass {rang - kapasitet} i køen) **")
+        return True
 
     except sqlite3.IntegrityError as e:
         feil = str(e)
@@ -136,7 +190,7 @@ def book_trening(epost: str, aktivitet: str, dato: str,
             print("Booking avvist: Brukeren er allerede påmeldt denne aktiviteten.")
         else:
             print(f"Booking avvist: {feil}")
-        sys.exit(1)
+        return False
     finally:
         con.close()
 

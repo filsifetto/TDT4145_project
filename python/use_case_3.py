@@ -1,30 +1,123 @@
 """
-Registrering av oppmøte for treningen nevnt i brukstilfelle 2. Brukernavn og
-hvilken trening skal være parametere. Denne skal leveres som Python og SQL.
-"""
+Registrering av oppmøte for gruppetimer.
 
-
-"""
-Vi bruker epost som brukernavn.
+Brukeren identifiseres med epost, og funksjonen viser alle gruppetimer
+brukeren er påmeldt før oppmøte registreres.
 """
 
 import sqlite3
 import sys
+
 from db import get_connection
 
 # Parametere
 EPOST = "johnny@stud.ntnu.no"
-TRENING_ID = 1
-PROFIL_ID = 1
 
-def registrer_oppmote(epost: str, trening_id: int):
+
+def _skal_lukke_tilkobling(con) -> bool:
+    database_path = con.execute("PRAGMA database_list").fetchone()[2]
+    return bool(database_path)
+
+
+def _hent_pameldte_treninger(con, profil_id: int):
+    return con.execute(
+        """
+        SELECT
+            pt.senter_ID,
+            pt.sal_ID,
+            pt.gruppeaktivitet_ID,
+            ga.aktivitet_navn,
+            ga.dato,
+            ga.start,
+            ga.slutt,
+            s.navn AS senter_navn,
+            mtg.profil_ID AS har_oppmote
+        FROM påmeldt_til pt
+        JOIN Gruppeaktivitet ga
+          ON ga.senter_ID = pt.senter_ID
+         AND ga.sal_ID = pt.sal_ID
+         AND ga.ID = pt.gruppeaktivitet_ID
+        JOIN Senter s
+          ON s.ID = ga.senter_ID
+        LEFT JOIN møter_til_gruppe mtg
+          ON mtg.senter_ID = pt.senter_ID
+         AND mtg.sal_ID = pt.sal_ID
+         AND mtg.gruppeaktivitet_ID = pt.gruppeaktivitet_ID
+         AND mtg.profil_ID = pt.profil_ID
+        WHERE pt.profil_ID = ?
+        ORDER BY ga.dato, ga.start, ga.aktivitet_navn, s.navn
+        """,
+        (profil_id,),
+    ).fetchall()
+
+
+def _skriv_pameldte_treninger(treninger):
+    print("\nPåmeldte treninger:")
+    for index, trening in enumerate(treninger, start=1):
+        status = "oppmøte registrert" if trening["har_oppmote"] is not None else "ikke registrert"
+        print(
+            f"{index}. {trening['aktivitet_navn']} | {trening['dato']} | "
+            f"{trening['start']}-{trening['slutt']} | {trening['senter_navn']} | {status}"
+        )
+
+
+def _velg_trening(treninger, trening_valg):
+    if isinstance(trening_valg, int) or (
+        isinstance(trening_valg, str) and trening_valg.strip().isdigit()
+    ):
+        valgt_id = int(trening_valg)
+        for trening in treninger:
+            if trening["gruppeaktivitet_ID"] == valgt_id:
+                return trening
+        return None
+
+    if trening_valg is None:
+        trening_valg = input("Skriv navnet på treningen du vil registrere oppmøte for: ").strip()
+    else:
+        trening_valg = str(trening_valg).strip()
+
+    if not trening_valg:
+        return None
+
+    eksakte = [
+        trening for trening in treninger
+        if trening["aktivitet_navn"].lower() == trening_valg.lower()
+    ]
+    if len(eksakte) == 1:
+        return eksakte[0]
+    if len(eksakte) > 1:
+        print("Fant flere påmeldte treninger med samme navn. Velg nummeret fra listen.")
+        valg = input("Nummer: ").strip()
+        if valg.isdigit():
+            indeks = int(valg)
+            if 1 <= indeks <= len(treninger):
+                return treninger[indeks - 1]
+        return None
+
+    delvise = [
+        trening for trening in treninger
+        if trening_valg.lower() in trening["aktivitet_navn"].lower()
+    ]
+    if len(delsvise) == 1:
+        return delvise[0]
+    if len(delsvise) > 1:
+        print("Fant flere treff. Velg nummeret fra listen.")
+        valg = input("Nummer: ").strip()
+        if valg.isdigit():
+            indeks = int(valg)
+            if 1 <= indeks <= len(treninger):
+                return treninger[indeks - 1]
+    return None
+
+
+def registrer_oppmote(epost: str, trening_valg=None):
     con = get_connection()
+    skal_lukkes = _skal_lukke_tilkobling(con)
 
     try:
-        # Steg 1: Finn profil
         profil = con.execute(
-            "SELECT ID, fornavn, etternavn FROM Profil WHERE epost = :epost",
-            {"epost": epost}
+            "SELECT ID, fornavn, etternavn FROM Profil WHERE epost = ?",
+            (epost,),
         ).fetchone()
 
         if profil is None:
@@ -34,52 +127,39 @@ def registrer_oppmote(epost: str, trening_id: int):
         profil_id = profil["ID"]
         print(f"Bruker funnet: {profil['fornavn']} {profil['etternavn']} (ID {profil_id})")
 
-        # Steg 2: Finn trening
-        trening = con.execute(
-            "SELECT ID FROM Gruppeaktivitet WHERE ID = :trening_id",
-            {"trening_id": trening_id}
-        ).fetchone()
+        treninger = _hent_pameldte_treninger(con, profil_id)
+        if not treninger:
+            print("Feil: Bruker er ikke påmeldt noen gruppetimer.")
+            sys.exit(1)
+
+        _skriv_pameldte_treninger(treninger)
+        trening = _velg_trening(treninger, trening_valg)
 
         if trening is None:
-            print(f"Feil: Fant ingen trening med ID '{trening_id}'.")
-            sys.exit(1)
-        
-        trening_id = trening["ID"]
-        print(f"Trening funnet: {trening['ID']}")
-
-        # Steg 3: Sjekk om bruker er påmeldt til treningen og hent nødvendige nøkler
-        påmeldt = con.execute(
-            """
-            SELECT senter_ID, sal_ID, gruppeaktivitet_ID
-            FROM påmeldt_til
-            WHERE profil_ID = :profil_id AND gruppeaktivitet_ID = :trening_id
-            """,
-            {"profil_id": profil_id, "trening_id": trening_id}
-        ).fetchone()
-
-        if påmeldt is None:
-            print(f"Feil: Bruker er ikke påmeldt til treningen.")
+            print(f"Feil: Fant ingen påmeldt trening som matcher '{trening_valg}'.")
             sys.exit(1)
 
-        senter_id          = påmeldt["senter_ID"]
-        sal_id             = påmeldt["sal_ID"]
-        gruppeaktivitet_id = påmeldt["gruppeaktivitet_ID"]
-        print(f"Bruker er påmeldt til trening ID {trening_id}")
+        print(
+            f"Valgt trening: {trening['aktivitet_navn']} - {trening['dato']} "
+            f"kl. {trening['start']} på {trening['senter_navn']}"
+        )
 
-        # Steg 4: Sett inn oppmøte med tidspunkt nå
         con.execute(
             """
             INSERT INTO møter_til_gruppe
                 (senter_ID, sal_ID, gruppeaktivitet_ID, profil_ID, tidspunkt)
-            VALUES (:senter_id, :sal_id, :gruppeaktivitet_id, :profil_id,
-                    datetime('now', 'localtime'))
+            VALUES (?, ?, ?, ?, datetime('now', 'localtime'))
             """,
-            {"senter_id": senter_id, "sal_id": sal_id,
-             "gruppeaktivitet_id": gruppeaktivitet_id, "profil_id": profil_id}
+            (
+                trening["senter_ID"],
+                trening["sal_ID"],
+                trening["gruppeaktivitet_ID"],
+                profil_id,
+            ),
         )
         con.commit()
 
-        print(f"Oppmøte registret for {profil['fornavn']} {profil['etternavn']} (ID {profil_id})")
+        print(f"Oppmøte registrert for {profil['fornavn']} {profil['etternavn']} (ID {profil_id})")
 
     except sqlite3.IntegrityError as e:
         feil = str(e)
@@ -93,6 +173,10 @@ def registrer_oppmote(epost: str, trening_id: int):
         print(f"Feil: {e}")
         con.rollback()
         sys.exit(1)
-    
     finally:
-        con.close()
+        if skal_lukkes:
+            con.close()
+
+
+if __name__ == "__main__":
+    registrer_oppmote(EPOST)

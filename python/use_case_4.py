@@ -30,7 +30,21 @@ def ukeplan(start_dag: str, uke: int):
     try:
         # Steg 1: Finn treninger sortert på tid
         treninger = con.execute(
-            "SELECT ID, start, slutt, senter_ID, sal_ID, aktivitet_navn FROM Gruppeaktivitet WHERE dato BETWEEN :start_dag AND :slutt_dag ORDER BY dato ASC, start ASC",
+            """
+            SELECT
+                ga.ID,
+                ga.dato,
+                ga.start,
+                ga.slutt,
+                ga.senter_ID,
+                ga.sal_ID,
+                ga.aktivitet_navn,
+                s.navn AS senter_navn
+            FROM Gruppeaktivitet ga
+            JOIN Senter s ON s.ID = ga.senter_ID
+            WHERE ga.dato BETWEEN :start_dag AND :slutt_dag
+            ORDER BY ga.dato ASC, ga.start ASC
+            """,
             {
                 "start_dag": start_dag,
                 "slutt_dag": (datetime.datetime.strptime(start_dag, "%Y-%m-%d") + datetime.timedelta(days=7)).strftime("%Y-%m-%d")
@@ -39,7 +53,11 @@ def ukeplan(start_dag: str, uke: int):
         slutt_dag = (datetime.datetime.strptime(start_dag, "%Y-%m-%d") + datetime.timedelta(days=7)).strftime("%Y-%m-%d")
         print(f"Ukeplan for uke {uke} fra {start_dag} til {slutt_dag}:")
         for trening in treninger:
-            print(f"Trening {trening['aktivitet_navn']} fra {trening['start']} til {trening['slutt']} på senter {trening['senter_ID']} sal {trening['sal_ID']}")
+            print(
+                f"{trening['dato']} | {trening['aktivitet_navn']} | "
+                f"{trening['start']}-{trening['slutt']} | "
+                f"{trening['senter_navn']} | sal {trening['sal_ID']}"
+            )
     except sqlite3.Error as e:
         print(f"Feil: {e}")
         con.rollback()
