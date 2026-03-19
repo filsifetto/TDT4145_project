@@ -6,6 +6,12 @@ Kjør:
 """
 
 from use_case_2 import book_trening
+from use_case_3 import registrer_oppmote
+from use_case_4 import ukeplan
+from use_case_5 import personlig_besokshistorie
+from use_case_6 import svarteliste
+from use_case_7 import mest_aktive_bruker
+from db import get_connection
 from use_case_8 import finn_treningspartnere
 
 
@@ -22,8 +28,31 @@ def meny():
     print("8. Finn treningspartnere")
     print("0. Avslutt")
 
+SQL_SCRIPTS = [
+    "sql/create_tables.sql",
+    "sql/insert_data.sql",
+    "sql/extra_data.sql",
+]
+
+
+def run_sql_script():
+    con = get_connection()
+    con.executescript(
+        "CREATE TABLE IF NOT EXISTS _migrations "
+        "(script TEXT PRIMARY KEY, ran_at TEXT DEFAULT (datetime('now')));"
+    )
+    already_run = {
+        row[0] for row in con.execute("SELECT script FROM _migrations").fetchall()
+    }
+    for script in SQL_SCRIPTS:
+        if script not in already_run:
+            con.executescript(open(script).read())
+            con.execute("INSERT INTO _migrations (script) VALUES (?)", (script,))
+            con.commit()
+    con.close()
 
 def main():
+    run_sql_script()
     while True:
         meny()
         valg = input("Velg: ").strip()
@@ -44,19 +73,26 @@ def main():
             book_trening(epost, aktivitet, dato, starttid, senter_navn)
 
         elif valg == "3":
-            print("Brukstilfelle 3 er ikke implementert ennå.")
+            epost       = input("Epost: ").strip()
+            trening_id  = input("Trening ID: ").strip()
+            registrer_oppmote(epost, trening_id)
 
         elif valg == "4":
-            print("Brukstilfelle 4 er ikke implementert ennå.")
+            start_dag = input("Startdag (YYYY-MM-DD): ").strip()
+            uke       = int(input("Uke: ").strip())
+            ukeplan(start_dag, uke)
 
         elif valg == "5":
-            print("Brukstilfelle 5 er ikke implementert ennå.")
-
+            epost       = input("Epost: ").strip()
+            start_dato  = input("Startdato (YYYY-MM-DD): ").strip()
+            personlig_besokshistorie(epost, start_dato)
         elif valg == "6":
-            print("Brukstilfelle 6 er ikke implementert ennå.")
+            epost       = input("Epost: ").strip()
+            svarteliste(epost)
 
         elif valg == "7":
-            print("Brukstilfelle 7 er ikke implementert ennå.")
+            maaned = int(input("Måned (1-12): ").strip())
+            mest_aktive_bruker(maaned)
 
         elif valg == "8":
             finn_treningspartnere()
