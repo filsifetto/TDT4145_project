@@ -12,12 +12,12 @@ from use_case_5 import personlig_besokshistorie
 from use_case_6 import svarteliste
 from use_case_7 import mest_aktive_bruker
 from db import get_connection
+from use_case_8 import finn_treningspartnere
 
 
 def meny():
     print("\n=== TreningDB ===")
     print("Velg et alternativ:")
-    print("0: Avslutt")
     print("1. Legg inn data (SQL-script)")
     print("2. Book trening")
     print("3. Registrer oppmøte")
@@ -95,7 +95,7 @@ def main():
             mest_aktive_bruker(maaned)
 
         elif valg == "8":
-            print("Brukstilfelle 8 er ikke implementert ennå.")
+            finn_treningspartnere()
 
         else:
             print("Ugyldig valg, prøv igjen.")
