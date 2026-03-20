@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[norsk]{babel}
+\usepackage[a4paper, margin=2.4cm]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{longtable}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8em}
+
+\title{Enkel brukerguide for \texttt{python/main.py}}
+\author{TDT4145 prosjekt}
+\date{19. mars 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Slik brukes programmet}
+Denne guiden er laget for en ekstern tester som skal kjøre prosjektet via
+\texttt{python/main.py}. Programmet er menybasert, og hvis et valg gir en
+forventet feilmelding, kommer menyen opp igjen i stedet for at programmet
+stopper.
+
+Start i prosjektmappen og kjør \texttt{python3 python/main.py}. Velg først
+\texttt{1. Legg inn data (SQL-script)}. Dette legger inn manglende demo-data og
+kan kjøres flere ganger uten at hele databasen bygges på nytt.
+
+Deretter kan programmet demonstreres i denne rekkefølgen:
+
+\begin{enumerate}[leftmargin=1.6em]
+    \item Velg \texttt{4. Ukeplan}. Skriv for eksempel \texttt{2026-03-19} som
+    startdag og \texttt{12} som uke. Da får du oversikt over treningene med dato,
+    tidspunkt og senter.
+    \item Velg \texttt{2. Book trening} hvis du vil legge Johnny på en fremtidig
+    time. Et eksempel per 19. mars 2026 er \texttt{johnny@stud.ntnu.no},
+    aktivitet \texttt{HIIT}, dato \texttt{2026-03-20}, starttid \texttt{07:00},
+    senter \texttt{Moholt}.
+    \item Velg \texttt{3. Registrer oppmøte}. Her skriver du bare epost, og
+    programmet viser hvilke treninger brukeren er påmeldt. Du trenger altså ikke
+    å vite trenings-ID; du velger via treningsnavn fra listen.
+    \item Velg \texttt{5. Personlig besøkshistorie} med
+    \texttt{johnny@stud.ntnu.no} og \texttt{2026-01-01}.
+    \item Velg \texttt{6. Svartelisting} med \texttt{mikkels@stud.ntnu.no}.
+    \item Velg \texttt{7. Mest aktive bruker} med måned \texttt{3}.
+    \item Velg \texttt{8. Finn treningspartnere}. Dette valget trenger ingen
+    ekstra input.
+\end{enumerate}
+
+\section*{Viktig å vite}
+I brukstilfelle 6 er det med vilje valgt å bruke \texttt{mikkels@stud.ntnu.no}
+og ikke Johnny. Grunnen er at Johnny brukes i flere av de andre brukstilfellene,
+og det er derfor mer praktisk å holde ham tilgjengelig der. Dette er altså et
+bevisst valg i demonstrasjonen.
+
+Hvis du prøver å registrere oppmøte for Johnny på en time som allerede er ferdig,
+for eksempel en time 17. mars når dagens dato er 19. mars 2026, skal det feile.
+Det er meningen. Systemet skal ikke registrere oppmøte bakover i tid. Hvis du vil
+se et vellykket oppmøte, finner du først en fremtidig gruppetime i
+\texttt{4. Ukeplan}, booker den i \texttt{2. Book trening}, og registrerer
+deretter oppmøte via \texttt{3. Registrer oppmøte}.
+
+\end{document}

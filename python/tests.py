@@ -150,6 +150,37 @@ class TestDataImport(unittest.TestCase):
                     4,
                 )
 
+    def test_sync_demo_data_populates_empty_database(self):
+        """Brukstilfelle 1 skal fylle en opprinnelig tom database med alle demo-data."""
+        import db
+        import data_sync
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_db = Path(tmpdir) / "treningdb.sqlite"
+            expected = data_sync.build_demo_source()
+            self.addCleanup(expected.close)
+
+            with patch("db.DB_PATH", temp_db):
+                data_sync.sync_demo_data()
+
+                repaired = db.get_connection()
+                self.addCleanup(repaired.close)
+
+                for table_name in [
+                    "Senter",
+                    "Profil",
+                    "Aktivitet",
+                    "Gruppeaktivitet",
+                    "påmeldt_til",
+                    "møter_til_gruppe",
+                    "Prikk",
+                ]:
+                    self.assertEqual(
+                        _table_count(repaired, table_name),
+                        _table_count(expected, table_name),
+                        table_name,
+                    )
+
     def test_get_connection_migrates_old_påmeldt_til_schema(self):
         """Eksisterende databasefiler med gammel påmeldt_til-struktur skal oppgraderes automatisk."""
         import db

@@ -20,7 +20,7 @@ DATA_SCRIPTS = [
     "sql/extra_data.sql",
 ]
 
-SYNC_ORDER = [
+PRE_BOOKING_SYNC_ORDER = [
     "Fasilitet",
     "Senter",
     "Idrettslag",
@@ -32,12 +32,15 @@ SYNC_ORDER = [
     "Tredemølle",
     "Sykkel",
     "Gruppe",
-    "Prikk",
     "er_medlem",
     "Idrettslagstime",
     "møter_til_idrett",
     "Gruppeaktivitet",
+]
+
+POST_BOOKING_SYNC_ORDER = [
     "møter_til_gruppe",
+    "Prikk",
 ]
 
 
@@ -217,7 +220,7 @@ def sync_demo_data(vis_status=False):
 
     total_inserted = 0
     try:
-        for table_name in SYNC_ORDER:
+        for table_name in PRE_BOOKING_SYNC_ORDER:
             inserted = _sync_missing_rows(target, source, table_name)
             total_inserted += inserted
             if vis_status:
@@ -227,6 +230,12 @@ def sync_demo_data(vis_status=False):
         total_inserted += booking_inserted
         if vis_status:
             print(f"påmeldt_til: la til {booking_inserted} manglende rader.")
+
+        for table_name in POST_BOOKING_SYNC_ORDER:
+            inserted = _sync_missing_rows(target, source, table_name)
+            total_inserted += inserted
+            if vis_status:
+                print(f"{table_name}: la til {inserted} manglende rader.")
 
         for script in DATA_SCRIPTS:
             _mark_script_as_run(target, script)
