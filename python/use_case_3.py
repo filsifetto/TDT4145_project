@@ -98,9 +98,9 @@ def _velg_trening(treninger, trening_valg):
         trening for trening in treninger
         if trening_valg.lower() in trening["aktivitet_navn"].lower()
     ]
-    if len(delsvise) == 1:
+    if len(delvise) == 1:
         return delvise[0]
-    if len(delsvise) > 1:
+    if len(delvise) > 1:
         print("Fant flere treff. Velg nummeret fra listen.")
         valg = input("Nummer: ").strip()
         if valg.isdigit():

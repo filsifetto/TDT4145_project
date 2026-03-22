@@ -5,7 +5,7 @@ Kjør:
     python python/main.py
 """
 
-from data_sync import run_startup_scripts, sync_demo_data
+from db_init import ensure_schema, run_migrations
 from use_case_2 import book_trening
 from use_case_3 import registrer_oppmote
 from use_case_4 import ukeplan
@@ -18,7 +18,7 @@ from use_case_8 import finn_treningspartnere
 def meny():
     print("\n=== TreningDB ===")
     print("Velg et alternativ:")
-    print("1. Legg inn data (SQL-script)")
+    print("1. Sett inn data")
     print("2. Book trening")
     print("3. Registrer oppmøte")
     print("4. Ukeplan")
@@ -39,7 +39,7 @@ def _kjor_menyalternativ(action):
 
 
 def main():
-    run_startup_scripts()
+    ensure_schema()
     while True:
         meny()
         valg = input("Velg: ").strip()
@@ -49,7 +49,7 @@ def main():
             break
 
         elif valg == "1":
-            _kjor_menyalternativ(lambda: sync_demo_data(vis_status=True))
+            run_migrations(verbose=True)
 
         elif valg == "2":
             epost = input("Epost: ").strip()

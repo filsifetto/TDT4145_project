@@ -1,0 +1,208 @@
+% TDT4145 Prosjektrapport – Del 2
+% Kompiler fra rapport-mappen:
+%   pdflatex del2.tex && pdflatex del2.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[a4paper, total={150mm, 245mm}]{geometry}
+\usepackage{hyperref}
+\hypersetup{colorlinks, citecolor=black, filecolor=black,
+            linkcolor=black, urlcolor=black}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{import}
+\usepackage{float}
+\usepackage{graphicx}
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.8em}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\addto\captionsenglish{%
+  \renewcommand{\contentsname}{Innholdsfortegnelse}%
+  \renewcommand{\tablename}{Tabell}%
+}
+
+% ─── Tittelside ───────────────────────────────────────────────────────────────
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+\IfFileExists{template_reference/Images/NTNU_logo.png}{%
+  \includegraphics[width=0.40\textwidth]{template_reference/Images/NTNU_logo.png}\\[1cm]}{}
+\textsc{\LARGE Institutt for datateknologi og informatikk}\\[1.5cm]
+\textsc{\Large TDT4145 – Datamodellering og databaser}\\[0.5cm]
+
+\HRule\\[0.4cm]
+{\huge \bfseries Prosjektrapport – Del 2}\\[0.4cm]
+\HRule\\[1.5cm]
+
+\large
+\emph{Forfattere:}\\
+\textit{Axel Filseth, Leo Egilson Skarbø, Knut Opland Moen}\\[0.5cm]
+\emph{Gruppe 213}
+
+\vfill
+{\large 22.\ mars 2026}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ─── 1. Brukerveiledning ──────────────────────────────────────────────────────
+\section{Brukerveiledning}
+
+\subsection{Dependencies}
+
+Python 3 og SQLite (inkludert i Python) må være installert.
+Ingen eksterne pakker er nødvendig.
+
+\subsection{Slik kjøres programmet}
+
+Start fra prosjektmappen og kjør:
+
+\begin{lstlisting}[basicstyle=\ttfamily, frame=single]
+python3 python/main.py
+\end{lstlisting}
+
+Databasefilen \texttt{treningdb.sqlite} leveres tom.
+Når programmet startes opprettes databaseskjemaet automatisk i bakgrunnen.
+Velg deretter \textbf{1 (Kjør migrasjoner)} for å laste inn demo-data.
+Etter det er alle brukstilfellene tilgjengelige.
+
+\subsection{Meny}
+
+Programmet presenterer en tekstbasert meny.
+Tabellen nedenfor viser hvert menyvalg med eksempelinput som demonstrerer
+brukstilfellet:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{clp{7.8cm}}
+\toprule
+\textbf{Valg} & \textbf{Brukstilfelle} & \textbf{Eksempelinput} \\
+\midrule
+1 & Kjør migrasjoner       & (ingen input – viser status) \\
+2 & Book trening           & Epost: \texttt{johnny@stud.ntnu.no},
+                              Aktivitet: \texttt{HIIT},
+                              Dato: \texttt{2026-03-20},
+                              Starttid: \texttt{07:00},
+                              Senter: \texttt{Moholt} \\
+3 & Registrer oppmøte      & Epost: \texttt{johnny@stud.ntnu.no},
+                              velg trening fra listen \\
+4 & Ukeplan                & Startdag: \texttt{2026-03-16},
+                              Uke: \texttt{12} \\
+5 & Besøkshistorie         & Epost: \texttt{johnny@stud.ntnu.no},
+                              Startdato: \texttt{2026-01-01} \\
+6 & Svartelisting          & Epost: \texttt{mikkels@stud.ntnu.no}
+                              (3~prikker siste 30~dager) \\
+7 & Mest aktive bruker     & Måned: \texttt{3} \\
+8 & Finn treningspartnere  & (ingen input) \\
+\bottomrule
+\end{tabular}
+\caption{Menyvalg med eksempelinput.}
+\end{table}
+
+
+% ─── 2. Endringer i skjema ────────────────────────────────────────────────────
+\section{Endringer i skjema siden db~1}
+
+Selve relasjonsmodellen er uendret fra db~1.
+
+% \textbf{\texttt{påmeldt\_til.påmelding\_nummer} – nullable med automatisk tildeling.}
+I det opprinnelige skjemaet var \texttt{påmelding\_nummer} definert som
+\texttt{NOT NULL}, noe som krevde at applikasjonskoden alltid beregnet og
+sendte inn et eksplisitt nummer ved påmelding.
+For å gjøre bookingkoden enklere ble kolonnen gjort nullable og en
+\texttt{AFTER INSERT}-trigger,
+\texttt{sett\_påmelding\_nummer\_insert}, ble lagt til:
+
+\begin{lstlisting}[language=SQL,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{blue!70!black},
+  commentstyle=\itshape\color{green!40!black},
+  frame=single,
+  literate={å}{{\aa}}1{ø}{{\o}}1{æ}{{\ae}}1]
+CREATE TRIGGER sett_paamelding_nummer_insert
+AFTER INSERT ON paameldt_til
+FOR EACH ROW
+WHEN NEW.paamelding_nummer IS NULL
+BEGIN
+    UPDATE paameldt_til
+    SET paamelding_nummer = (
+        SELECT COALESCE(MAX(pt.paamelding_nummer), 0) + 1
+        FROM paameldt_til pt
+        WHERE pt.senter_ID          = NEW.senter_ID
+          AND pt.sal_ID             = NEW.sal_ID
+          AND pt.gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+          AND NOT (pt.profil_ID = NEW.profil_ID)
+    )
+    WHERE senter_ID = NEW.senter_ID
+      AND sal_ID    = NEW.sal_ID
+      AND gruppeaktivitet_ID = NEW.gruppeaktivitet_ID
+      AND profil_ID          = NEW.profil_ID;
+END;
+\end{lstlisting}
+
+Applikasjonskoden kan nå sette inn en rad uten å oppgi
+\texttt{påmelding\_nummer}, og databasen tildeler automatisk neste
+ledige nummer i køen for den aktuelle gruppeaktiviteten.
+En alternativ løsning ville vært å sette \texttt{påmelding\_nummer} til \texttt{autoincrement}.
+
+\subsection*{Migrasjonssystem}
+
+For å holde kontroll på sql-scriptene som skal kjøres bruker vi et enkelt migrasjonssystem i \texttt{python/db\_init.py}:
+
+\begin{itemize}[noitemsep]
+    \item Alle \texttt{.sql}-filer i \texttt{sql/migrations/} kjøres i
+          alfabetisk (nummerert) rekkefølge.
+    \item En tabell \texttt{\_migrations} i databasen registrerer
+          hvilke migrasjoner som allerede er kjørt.
+    \item En migrasjon som allerede er kjørt hoppes over.
+\end{itemize}
+
+Migrasjonene som leveres er:
+
+\medskip
+\begin{tabular}{ll}
+\toprule
+\textbf{Fil} & \textbf{Innhold} \\
+\midrule
+\texttt{000\_create\_tables.sql} & Oppretter alle tabeller og triggere \\
+\texttt{001\_insert\_data.sql}   & Grunnleggende demo-data \\
+\texttt{002\_extra\_data.sql}    & Ekstra profiler, aktiviteter og prikker \\
+\bottomrule
+\end{tabular}
+
+% ─── 3. Brukstilfelle-output ──────────────────────────────────────────────────
+\section{Output fra brukstilfellene}
+\label{sec:output}
+
+\lstinputlisting[
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  numbers=none,
+  showstringspaces=false,
+  extendedchars=true,
+  inputencoding=utf8,
+  literate=
+    {å}{{\aa}}1
+    {ø}{{\o}}1
+    {æ}{{\ae}}1
+    {Å}{{\AA}}1
+    {Ø}{{\O}}1
+    {Æ}{{\AE}}1
+    {→}{{->}}1
+    {–}{{\textendash}}1,
+%   caption={Terminaloutput fra alle brukstilfeller (\texttt{output/use\_case\_output.txt}).},
+  label={lst:output}
+]{../output/use_case_output.txt}
+
+\end{document}

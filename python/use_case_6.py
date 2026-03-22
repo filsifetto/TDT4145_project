@@ -1,5 +1,5 @@
 """
-6. Svartelisting. Brukeren ‘johnny@stud.ntnu.no’ fikk uheldigvis tre prikker i system
+6. Svartelisting. Brukeren 'johnny@stud.ntnu.no' fikk uheldigvis tre prikker i system
 og skal utestenges fra elektronisk booking i 30 dager. Implementeres i Python og
 SQL. Dere skal sjekke at det finnes minst tre prikker innen siste 30 dager før dere
 svartelister.
@@ -7,7 +7,7 @@ svartelister.
 
 import sqlite3
 import sys
-from datetime import datetime, timedelta
+
 from db import get_connection
 
 # Parametere
@@ -20,18 +20,19 @@ def antall_prikker_siste_maaned(epost: str) -> int:
     try:
         row = con.execute(
             "SELECT ID FROM Profil WHERE epost = :epost",
-            {"epost": epost}
+            {"epost": epost},
         ).fetchone()
         if row is None:
             raise ValueError(f"Bruker {epost} ikke funnet.")
         profil_id = row["ID"]
 
-        start_dato = datetime.now() - timedelta(days=30)
-        slutt_dato = datetime.now()
-
         return con.execute(
-            "SELECT COUNT(*) FROM Prikk WHERE profil_ID = :profil_id AND dato BETWEEN :start_dato AND :slutt_dato",
-            {"profil_id": profil_id, "start_dato": start_dato, "slutt_dato": slutt_dato}
+            """
+            SELECT COUNT(*) FROM Prikk
+            WHERE profil_ID = :profil_id
+              AND dato >= date('now', 'localtime', '-30 days')
+            """,
+            {"profil_id": profil_id},
         ).fetchone()[0]
     finally:
         con.close()
@@ -54,3 +55,5 @@ def svarteliste(epost: str):
         sys.exit(1)
 
 
+if __name__ == "__main__":
+    svarteliste(EPOST)
