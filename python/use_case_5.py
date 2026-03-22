@@ -26,9 +26,11 @@ def personlig_besokshistorie(epost: str, start_dato: str):
 
         # Steg 1: Finn treninger bruker har møtt til (via møter_til_gruppe)
         treninger_query = """
-            SELECT DISTINCT ga.ID, ga.start, ga.slutt, ga.senter_ID, ga.sal_ID, ga.aktivitet_navn, ga.dato
+            SELECT DISTINCT ga.ID, ga.start, ga.slutt, ga.aktivitet_navn, ga.dato,
+                   s.navn AS senter_navn
             FROM møter_til_gruppe mtg
             JOIN Gruppeaktivitet ga ON ga.senter_ID = mtg.senter_ID AND ga.sal_ID = mtg.sal_ID AND ga.ID = mtg.gruppeaktivitet_ID
+            JOIN Senter s ON s.ID = ga.senter_ID
             WHERE mtg.profil_ID = :profil_id AND ga.dato BETWEEN :start_dato AND :slutt_dato
             ORDER BY ga.dato ASC, ga.start ASC
         """
@@ -37,7 +39,7 @@ def personlig_besokshistorie(epost: str, start_dato: str):
 
         print(f"Personlig besøkshistorie for {epost} siden {start_dato}:")
         for trening in treninger:
-            print(f"Trening {trening['aktivitet_navn']} fra {trening['start']} til {trening['slutt']} på senter {trening['senter_ID']} sal {trening['sal_ID']} ({trening['dato']})")
+            print(f"Trening {trening['aktivitet_navn']} fra {trening['start']} til {trening['slutt']} på {trening['senter_navn']} ({trening['dato']})")
     except sqlite3.Error as e:
         print(f"Feil: {e}")
         con.rollback()
