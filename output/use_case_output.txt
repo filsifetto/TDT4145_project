@@ -1,0 +1,144 @@
+
+============================================================
+INNLASTING AV DATA (menyvalg 1 – kjør migrasjoner)
+============================================================
+  Hopper over 000_create_tables.sql (allerede kjørt).
+  Kjører 001_insert_data.sql ...
+  OK: 001_insert_data.sql
+  Kjører 002_extra_data.sql ...
+  OK: 002_extra_data.sql
+Ferdig. Kjørte 2 migrasjon(er).
+
+============================================================
+BRUKSTILFELLE 2: Book trening
+============================================================
+Scenario A – booking som allerede er registrert i demo-data:
+Bruker funnet: Johnny Olsen (ID 4)
+Trening funnet: Spin60 - 2026-03-17 kl. 18:30-19:30 på Øya treningssenter
+
+Du var allerede påmeldt denne treningen.
+  Aktivitet : Spin60
+  Dato/tid  : 2026-03-17 kl. 18:30
+  Senter    : Øya treningssenter
+  Plass nr. : 1 av 20
+
+Scenario B – ny booking (HIIT, Moholt, 20. mars):
+Bruker funnet: Johnny Olsen (ID 4)
+Tolket 'Moholt' som 'Moholt treningssenter'.
+Trening funnet: HIIT - 2026-03-20 kl. 07:00-07:50 på Moholt treningssenter
+
+Booking vellykket!
+  Aktivitet : HIIT
+  Dato/tid  : 2026-03-20 kl. 07:00
+  Senter    : Moholt treningssenter
+  Plass nr. : 1 av 25
+
+Scenario C – forsøk med svartelistet bruker (Mikkel, 3 prikker):
+Bruker funnet: Mikkel Strand (ID 7)
+Bruker Mikkel Strand er svartelistet.
+
+============================================================
+BRUKSTILFELLE 3: Registrer oppmøte
+============================================================
+Forsøk på å registrere oppmøte for en aktivitet som allerede er over
+(demonstrerer at triggeren 'check_møter_til_gruppe_etter_slutt' virker):
+Bruker funnet: Johnny Olsen (ID 4)
+
+Påmeldte treninger:
+1. Spin60 | 2026-03-16 | 07:00-08:00 | Øya treningssenter | oppmøte registrert
+2. Spin60 | 2026-03-17 | 18:30-19:30 | Øya treningssenter | oppmøte registrert
+3. Spin45 | 2026-03-18 | 17:00-17:45 | Øya treningssenter | ikke registrert
+4. Spin 4x4 | 2026-03-18 | 18:30-19:15 | Øya treningssenter | oppmøte registrert
+5. HIIT | 2026-03-20 | 07:00-07:50 | Moholt treningssenter | ikke registrert
+Valgt trening: Spin60 - 2026-03-17 kl. 18:30 på Øya treningssenter
+Feil: Kan ikke registrere oppmøte etter gruppeaktivitetens slutt.
+
+============================================================
+BRUKSTILFELLE 4: Ukeplan (uke 12, start 2026-03-16)
+============================================================
+Ukeplan for uke 12 fra 2026-03-16 til 2026-03-23:
+2026-03-16 | Spin60 | 07:00-08:00 | Øya treningssenter | sal 1
+2026-03-16 | Spin45 | 08:00-08:45 | Dragvoll idrettssenter | sal 1
+2026-03-16 | Yoga Flow | 09:00-09:55 | Øya treningssenter | sal 5
+2026-03-16 | Spin45 | 12:00-12:45 | Øya treningssenter | sal 1
+2026-03-16 | Dans & Rytme | 15:00-15:50 | Øya treningssenter | sal 4
+2026-03-16 | Spin 8x3min | 17:00-17:55 | Øya treningssenter | sal 1
+2026-03-16 | Spin60 | 17:30-18:30 | Dragvoll idrettssenter | sal 1
+2026-03-16 | Spin 4x4 | 18:30-19:15 | Øya treningssenter | sal 1
+2026-03-16 | Styrketrening | 19:30-20:20 | Moholt treningssenter | sal 2
+2026-03-17 | Spin45 | 06:30-07:15 | Øya treningssenter | sal 1
+2026-03-17 | Spin 4x4 | 07:00-07:45 | Dragvoll idrettssenter | sal 1
+2026-03-17 | Yoga Sterk | 09:00-09:55 | Gløshaugen idrettsbygg | sal 2
+2026-03-17 | Spin 4x4 | 12:00-12:45 | Øya treningssenter | sal 1
+2026-03-17 | Spin45 | 12:00-12:45 | Dragvoll idrettssenter | sal 1
+2026-03-17 | Zumba | 16:00-16:50 | Gløshaugen idrettsbygg | sal 3
+2026-03-17 | Spin 8x3min | 18:00-18:55 | Dragvoll idrettssenter | sal 1
+2026-03-17 | HIIT | 18:00-18:50 | Moholt treningssenter | sal 2
+2026-03-17 | Spin60 | 18:30-19:30 | Øya treningssenter | sal 1
+2026-03-18 | Spin 8x3min | 07:00-07:55 | Øya treningssenter | sal 1
+2026-03-18 | Spin60 | 08:00-09:00 | Dragvoll idrettssenter | sal 1
+2026-03-18 | Pilates | 10:00-10:55 | Øya treningssenter | sal 5
+2026-03-18 | Styrketrening | 16:00-16:50 | Moholt treningssenter | sal 2
+2026-03-18 | Spin45 | 17:00-17:45 | Øya treningssenter | sal 1
+2026-03-18 | Spin45 | 17:30-18:15 | Dragvoll idrettssenter | sal 1
+2026-03-18 | Spin 4x4 | 18:30-19:15 | Øya treningssenter | sal 1
+2026-03-19 | Yoga Flow | 17:00-17:55 | Gløshaugen idrettsbygg | sal 2
+2026-03-19 | Dans & Rytme | 18:00-18:50 | Øya treningssenter | sal 4
+2026-03-20 | HIIT | 07:00-07:50 | Moholt treningssenter | sal 2
+2026-03-20 | Zumba | 12:00-12:50 | Gløshaugen idrettsbygg | sal 3
+
+============================================================
+BRUKSTILFELLE 5: Personlig besøkshistorie
+============================================================
+johnny@stud.ntnu.no siden 2026-01-01:
+Personlig besøkshistorie for johnny@stud.ntnu.no siden 2026-01-01:
+Trening Yoga Flow fra 07:00 til 08:00 på senter 1 sal 4 (2026-03-09)
+Trening Dans & Rytme fra 18:00 til 19:00 på senter 1 sal 4 (2026-03-10)
+Trening Spin 4x4 fra 07:30 til 08:30 på senter 3 sal 1 (2026-03-12)
+Trening Spin60 fra 07:00 til 08:00 på senter 1 sal 1 (2026-03-16)
+Trening Spin60 fra 18:30 til 19:30 på senter 1 sal 1 (2026-03-17)
+Trening Spin 4x4 fra 18:30 til 19:15 på senter 1 sal 1 (2026-03-18)
+
+============================================================
+BRUKSTILFELLE 6: Svartelisting
+============================================================
+mikkels@stud.ntnu.no (3 prikker siste 30 dager → svartelistet):
+Bruker mikkels@stud.ntnu.no er svartelistet.
+
+johnny@stud.ntnu.no (ingen prikker → ikke svartelistet):
+Bruker johnny@stud.ntnu.no har ikke tre prikker siste 30 dager.
+
+============================================================
+BRUKSTILFELLE 7: Mest aktive bruker (mars 2026)
+============================================================
+Personen/personene som har deltatt på flest gruppetimer i måned 3:
+ Johnny Olsen har deltatt på flest gruppetimer
+
+============================================================
+BRUKSTILFELLE 8: Finn treningspartnere
+============================================================
+
+Bruker 1                       Bruker 2                        Felles treninger
+-------------------------------------------------------------------------------
+johnny@stud.ntnu.no            emmab@stud.ntnu.no                             4
+johnny@stud.ntnu.no            sofieh@stud.ntnu.no                            3
+johnny@stud.ntnu.no            nora.solberg@stud.ntnu.no                      2
+emmab@stud.ntnu.no             sofieh@stud.ntnu.no                            2
+sofieh@stud.ntnu.no            ingrid@stud.ntnu.no                            2
+johnny@stud.ntnu.no            mikkels@stud.ntnu.no                           1
+johnny@stud.ntnu.no            ingrid@stud.ntnu.no                            1
+johnny@stud.ntnu.no            tobiasv@stud.ntnu.no                           1
+johnny@stud.ntnu.no            lars.berg@stud.ntnu.no                         1
+emmab@stud.ntnu.no             mikkels@stud.ntnu.no                           1
+emmab@stud.ntnu.no             andersn@stud.ntnu.no                           1
+emmab@stud.ntnu.no             nora.solberg@stud.ntnu.no                      1
+emmab@stud.ntnu.no             ida.nilsen@stud.ntnu.no                        1
+sofieh@stud.ntnu.no            mikkels@stud.ntnu.no                           1
+sofieh@stud.ntnu.no            majae@stud.ntnu.no                             1
+sofieh@stud.ntnu.no            lars.berg@stud.ntnu.no                         1
+ingrid@stud.ntnu.no            majae@stud.ntnu.no                             1
+ingrid@stud.ntnu.no            lars.berg@stud.ntnu.no                         1
+andersn@stud.ntnu.no           ida.nilsen@stud.ntnu.no                        1
+tobiasv@stud.ntnu.no           nora.solberg@stud.ntnu.no                      1
+
+============================================================
