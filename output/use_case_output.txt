@@ -92,12 +92,12 @@ BRUKSTILFELLE 5: Personlig besøkshistorie
 ============================================================
 johnny@stud.ntnu.no siden 2026-01-01:
 Personlig besøkshistorie for johnny@stud.ntnu.no siden 2026-01-01:
-Trening Yoga Flow fra 07:00 til 08:00 på senter 1 sal 4 (2026-03-09)
-Trening Dans & Rytme fra 18:00 til 19:00 på senter 1 sal 4 (2026-03-10)
-Trening Spin 4x4 fra 07:30 til 08:30 på senter 3 sal 1 (2026-03-12)
-Trening Spin60 fra 07:00 til 08:00 på senter 1 sal 1 (2026-03-16)
-Trening Spin60 fra 18:30 til 19:30 på senter 1 sal 1 (2026-03-17)
-Trening Spin 4x4 fra 18:30 til 19:15 på senter 1 sal 1 (2026-03-18)
+Trening Yoga Flow fra 07:00 til 08:00 på Øya treningssenter (2026-03-09)      
+Trening Dans & Rytme fra 18:00 til 19:00 på Øya treningssenter (2026-03-10)   
+Trening Spin 4x4 fra 07:30 til 08:30 på Gløshaugen idrettsbygg (2026-03-12)   
+Trening Spin60 fra 07:00 til 08:00 på Øya treningssenter (2026-03-16)
+Trening Spin60 fra 18:30 til 19:30 på Øya treningssenter (2026-03-17)
+Trening Spin 4x4 fra 18:30 til 19:15 på Øya treningssenter (2026-03-18)  
 
 ============================================================
 BRUKSTILFELLE 6: Svartelisting
