@@ -6,6 +6,7 @@ Python og SQL. Husk å ta med måned som parameter. Legg inn noen som har
 trent slik at du viser at queriet virker.
 """
 
+import calendar
 import sqlite3
 import sys
 from datetime import datetime, timedelta
@@ -18,10 +19,10 @@ def mest_aktive_bruker(maaned: int):
     con = get_connection()
 
     try:
-        # setter start_dato til første dag i måneden som er gitt som parameter
-        start_dato = datetime.now().replace(day=1, month=maaned)
-        # setter slutt_dato til siste dag i måneden
-        slutt_dato = datetime.now().replace(day=1, month=maaned + 1) - timedelta(days=1)
+        aar = datetime.now().year
+        start_dato = datetime(aar, maaned, 1)
+        siste_dag = calendar.monthrange(aar, maaned)[1]
+        slutt_dato = datetime(aar, maaned, siste_dag)
         start_str = start_dato.strftime("%Y-%m-%d")
         slutt_str = slutt_dato.strftime("%Y-%m-%d")
 
